@@ -647,7 +647,7 @@ async function openQR() {
   document.getElementById('qr-room-label').innerHTML = `ห้อง <strong>${currentRoom.name}</strong><br>ประจำวันที่ ${formatThaiDate(dateStr)}`;
   document.getElementById('qr-container').innerHTML = '';
   
-  // สร้าง URL ปลายทางชี้ไปที่ checkin.html ให้ถูกต้อง
+  // สร้าง URL ปลายทางชี้ไปที่ checkin.html ให้ถูกต้องผ่าน origin ตรงๆ
   const base = window.location.origin + '/checkin.html';
   const url = `${base}?rid=${currentRoom.id}&date=${dateStr}&room=${encodeURIComponent(currentRoom.name)}&gas=${encodeURIComponent(gasUrl)}`;
   
@@ -802,4 +802,3 @@ initApp();
 </script>
 </body>
 </html>
-
