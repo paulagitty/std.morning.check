@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>เช็คอินเข้าแถว</title>
+<title>สแกนเช็คอิน</title>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -14,7 +14,7 @@
     --bg: #f0faf5; --text: #1a1a18; --muted: #6b6b67;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Sarabun', sans-serif; background: var(--bg); min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding: 1rem; }
+  body { font-family: 'Sarabun', sans-serif; background: var(--bg); min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 1rem; color: var(--text); }
 
   .header { text-align: center; padding: 2rem 1rem 1.5rem; width: 100%; max-width: 420px; }
   .header .icon { font-size: 48px; margin-bottom: 8px; }
@@ -22,62 +22,77 @@
   .header p { color: var(--muted); font-size: 14px; margin-top: 4px; }
 
   .card { background: #fff; border-radius: 16px; padding: 1.5rem; width: 100%; max-width: 420px; box-shadow: 0 4px 24px rgba(0,0,0,0.08); margin-bottom: 1rem; }
-  .card h2 { font-size: 16px; font-weight: 600; margin-bottom: 1rem; color: var(--text); }
+  .card h2 { font-size: 16px; font-weight: 600; margin-bottom: 1rem; }
 
-  .search-box { width: 100%; padding: 12px 16px; border: 2px solid #e5e5e0; border-radius: 12px; font-family: 'Sarabun', sans-serif; font-size: 16px; margin-bottom: 12px; transition: border-color 0.15s; }
+  .search-box { width: 100%; padding: 12px 16px; border: 2px solid #e5e5e0; border-radius: 12px; font-family: inherit; font-size: 16px; margin-bottom: 12px; transition: 0.2s; }
   .search-box:focus { outline: none; border-color: var(--green); }
 
-  .student-list { max-height: 320px; overflow-y: auto; }
-  .student-item { display: flex; align-items: center; padding: 12px 14px; border-radius: 10px; cursor: pointer; transition: all 0.12s; border: 2px solid transparent; margin-bottom: 6px; background: #fafaf8; }
+  .student-list { max-height: 380px; overflow-y: auto; }
+  .student-item { display: flex; align-items: center; padding: 12px 14px; border-radius: 10px; cursor: pointer; transition: 0.15s; border: 2px solid transparent; margin-bottom: 6px; background: #fafaf8; }
   .student-item:hover { background: var(--green-light); border-color: var(--green); }
   .student-item.selected { background: var(--green-light); border-color: var(--green); }
+  
   .student-num { width: 28px; height: 28px; border-radius: 50%; background: var(--green-light); color: var(--green-dark); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; margin-right: 12px; flex-shrink: 0; }
   .student-item.selected .student-num { background: var(--green); color: #fff; }
   .student-name { font-size: 16px; font-weight: 500; }
   .student-item .check-icon { margin-left: auto; font-size: 20px; opacity: 0; }
   .student-item.selected .check-icon { opacity: 1; }
 
-  .btn-checkin { width: 100%; padding: 16px; background: var(--green); color: #fff; border: none; border-radius: 14px; font-family: 'Sarabun', sans-serif; font-size: 18px; font-weight: 700; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; justify-content: center; gap: 8px; }
-  .btn-checkin:hover { background: var(--green-dark); transform: translateY(-1px); }
-  .btn-checkin:disabled { background: #c5c5c0; cursor: not-allowed; transform: none; }
+  .btn-checkin { width: 100%; padding: 16px; background: var(--green); color: #fff; border: none; border-radius: 14px; font-family: inherit; font-size: 18px; font-weight: 700; cursor: pointer; transition: 0.15s; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 12px rgba(29,158,117,0.3); }
+  .btn-checkin:hover:not(:disabled) { background: var(--green-dark); transform: translateY(-2px); }
+  .btn-checkin:disabled { background: #c5c5c0; box-shadow: none; cursor: not-allowed; transform: none; }
 
-  /* SUCCESS */
+  /* SUCCESS & SCREENS */
   .success-screen { display: none; flex-direction: column; align-items: center; text-align: center; padding: 3rem 1rem; width: 100%; max-width: 420px; }
-  .success-icon { font-size: 80px; margin-bottom: 16px; animation: pop 0.4s ease; }
-  @keyframes pop { 0%{transform:scale(0)} 80%{transform:scale(1.15)} 100%{transform:scale(1)} }
+  .success-icon { font-size: 80px; margin-bottom: 16px; animation: pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+  @keyframes pop { 0%{transform:scale(0)} 100%{transform:scale(1)} }
   .success-name { font-size: 26px; font-weight: 700; color: var(--green-dark); margin-bottom: 8px; }
-  .success-sub { font-size: 15px; color: var(--muted); margin-bottom: 24px; }
-  .success-card { background: var(--green-light); border-radius: 14px; padding: 1.25rem; width: 100%; max-width: 320px; margin-bottom: 1.5rem; }
-  .btn-back { padding: 12px 28px; border: 2px solid var(--green); border-radius: 12px; background: #fff; color: var(--green-dark); font-family: 'Sarabun', sans-serif; font-size: 16px; font-weight: 600; cursor: pointer; }
+  .success-card { background: var(--green-light); border-radius: 14px; padding: 1.25rem; width: 100%; max-width: 320px; margin-top: 1.5rem; margin-bottom: 1.5rem; }
+  .btn-back { padding: 12px 28px; border: 2px solid var(--green); border-radius: 12px; background: #fff; color: var(--green-dark); font-family: inherit; font-size: 16px; font-weight: 600; cursor: pointer; }
 
-  .error-box { background: var(--red-light); border-radius: 12px; padding: 16px; text-align: center; color: var(--red); font-size: 15px; width: 100%; max-width: 420px; }
-  .info-bar { background: var(--green-dark); color: #fff; border-radius: 12px; padding: 12px 16px; width: 100%; max-width: 420px; font-size: 14px; text-align: center; margin-bottom: 1rem; }
+  .error-box { background: var(--red-light); border-radius: 12px; padding: 20px; text-align: center; color: var(--red); font-size: 15px; width: 100%; max-width: 420px; border: 1px solid var(--red); margin-top: 2rem; }
+  .info-bar { background: var(--green-dark); color: #fff; border-radius: 12px; padding: 12px 16px; width: 100%; max-width: 420px; font-size: 15px; text-align: center; margin-bottom: 1rem; font-weight: 500; }
 
-  .already-badge { display: inline-block; background: var(--amber-light); color: var(--amber); padding: 3px 10px; border-radius: 6px; font-size: 13px; font-weight: 500; margin-left: 8px; }
-  .empty { text-align: center; color: var(--muted); padding: 2rem; font-size: 14px; }
+  .already-badge { display: inline-block; background: var(--amber-light); color: var(--amber); padding: 3px 8px; border-radius: 6px; font-size: 12px; font-weight: 600; margin-left: 8px; vertical-align: middle; }
+  .empty { text-align: center; color: var(--muted); padding: 2rem; font-size: 15px; }
+
+  /* LOADING SPINNER */
+  .loading-screen { position: fixed; inset: 0; background: rgba(255,255,255,0.95); z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+  .spinner { border: 4px solid #E1F5EE; border-top: 4px solid var(--green); border-radius: 50%; width: 48px; height: 48px; animation: spin 1s linear infinite; margin-bottom: 16px; }
+  @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 </style>
 </head>
 <body>
 
+<div class="loading-screen" id="loading-screen">
+  <div class="spinner"></div>
+  <h2 style="color:var(--green-dark); font-size:18px;">กำลังเชื่อมต่อฐานข้อมูล...</h2>
+  <p style="color:var(--muted); font-size:14px; margin-top:8px;">กรุณารอสักครู่</p>
+</div>
+
 <div class="header">
-  <div class="icon">📋</div>
-  <h1>เช็คอินเข้าแถว</h1>
+  <div class="icon">📱</div>
+  <h1>ลงเวลาเข้าแถว</h1>
   <p id="date-label"></p>
 </div>
 
 <div id="info-bar" class="info-bar" style="display:none"></div>
-<div id="error-box" class="error-box" style="display:none">ลิงก์ไม่ถูกต้อง กรุณาสแกน QR ใหม่อีกครั้ง</div>
+<div id="error-box" class="error-box" style="display:none">
+  <h3>❌ ข้อมูลไม่ถูกต้อง</h3>
+  <p style="margin-top:8px; color:var(--text-muted)" id="error-msg">กรุณาสแกน QR Code ใหม่อีกครั้ง</p>
+</div>
 
-<div id="main-section">
+<div id="main-section" style="display:none; width:100%; align-items:center; flex-direction:column;">
   <div class="card">
-    <h2>เลือกชื่อของคุณ</h2>
+    <h2>👉 เลือกชื่อของคุณ</h2>
     <input type="text" class="search-box" id="search" placeholder="🔍 ค้นหาชื่อ..." oninput="filterStudents()">
     <div class="student-list" id="student-list"></div>
   </div>
 
-  <div class="card" style="padding:0;overflow:hidden;border:none;background:none;box-shadow:none">
+  <div style="width:100%; max-width:420px; margin-top:1rem;">
     <button class="btn-checkin" id="checkin-btn" disabled onclick="doCheckin()">
-      <span>✅</span> ฉันมาแล้ว!
+      <span class="spinner" id="btn-spinner" style="display:none; width:20px; height:20px; border-width:3px; margin:0; border-color:rgba(255,255,255,0.3); border-top-color:#fff;"></span>
+      <span id="btn-text">✅ ฉันมาแล้ว!</span>
     </button>
   </div>
 </div>
@@ -85,58 +100,99 @@
 <div class="success-screen" id="success-screen">
   <div class="success-icon">✅</div>
   <div class="success-name" id="suc-name"></div>
-  <div class="success-sub" id="suc-room"></div>
+  <div style="color:var(--muted); font-size:16px;" id="suc-room"></div>
+  
   <div class="success-card">
-    <div style="font-size:15px;color:var(--green-dark);font-weight:600">บันทึกการมาเรียนแล้ว</div>
-    <div style="font-size:14px;color:var(--green);margin-top:6px" id="suc-time"></div>
+    <div style="font-size:16px; color:var(--green-dark); font-weight:600">บันทึกเข้า Google Sheets เรียบร้อย</div>
+    <div style="font-size:15px; color:var(--green); margin-top:8px" id="suc-time"></div>
   </div>
-  <button class="btn-back" onclick="resetForm()">← เช็คอินคนอื่น</button>
+  
+  <button class="btn-back" onclick="resetForm()">← กลับไปหน้าแรก</button>
 </div>
 
 <script>
-let params={}, students=[], selected=null, db={};
+let params={}, students=[], attendance={}, selected=null;
 
+// ดึงพารามิเตอร์จาก URL ที่ฝังมาจาก QR Code
 function getParams() {
   const q = new URLSearchParams(window.location.search);
-  return { rid: q.get('rid'), date: q.get('date'), room: q.get('room') };
+  return { 
+    rid: q.get('rid'), 
+    date: q.get('date'), 
+    room: q.get('room'),
+    gasUrl: q.get('gas') 
+  };
 }
-function loadDB() {
-  const saved = localStorage.getItem('attend_db');
-  return saved ? JSON.parse(saved) : null;
-}
-function saveDB(d) { localStorage.setItem('attend_db', JSON.stringify(d)); }
 
-function init() {
+function formatThaiDate(dateStr) {
+  if(!dateStr) return '';
+  return new Date(dateStr).toLocaleDateString('th-TH',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+}
+
+function showError(msg) {
+  document.getElementById('loading-screen').style.display = 'none';
+  const box = document.getElementById('error-box');
+  if(msg) document.getElementById('error-msg').textContent = msg;
+  box.style.display = 'block';
+  document.getElementById('main-section').style.display = 'none';
+}
+
+async function init() {
   params = getParams();
-  const now = new Date();
-  document.getElementById('date-label').textContent = now.toLocaleDateString('th-TH',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
-
-  if(!params.rid) { document.getElementById('error-box').style.display='block'; document.getElementById('main-section').style.display='none'; return; }
-  db = loadDB();
-  if(!db || !db.rooms || !db.rooms[params.rid]) {
-    document.getElementById('error-box').textContent = 'ไม่พบข้อมูลห้องเรียน กรุณาสแกน QR ใหม่';
-    document.getElementById('error-box').style.display='block';
-    document.getElementById('main-section').style.display='none'; return;
+  
+  if(!params.rid || !params.date || !params.gasUrl) { 
+    showError('QR Code ไม่สมบูรณ์ หรืออาจารย์ยังไม่ได้ตั้งค่า Google Sheets'); 
+    return; 
   }
-  const room = db.rooms[params.rid];
-  students = room.students;
 
+  document.getElementById('date-label').textContent = formatThaiDate(params.date);
   const bar = document.getElementById('info-bar');
-  bar.textContent = '🏫 ห้อง ' + (params.room||room.name) + ' | ' + room.grade;
-  bar.style.display = 'block';
-
-  renderList(students);
+  bar.textContent = '🚪 ห้อง ' + (params.room || 'ไม่ระบุชื่อ');
+  
+  try {
+    // ยิง API ไปหา Google Sheets เพื่อขอรายชื่อเด็กในห้องนี้
+    const res = await fetch(params.gasUrl, {
+      method: 'POST',
+      body: JSON.stringify({ action: 'getRoomData', rid: params.rid, date: params.date })
+    });
+    
+    const data = await res.json();
+    
+    if (data.students && data.students.length > 0) {
+      students = data.students;
+      attendance = data.attendance || {};
+      
+      bar.style.display = 'block';
+      document.getElementById('main-section').style.display = 'flex';
+      renderList(students);
+      document.getElementById('loading-screen').style.display = 'none';
+    } else {
+      showError('ไม่พบรายชื่อนักเรียนในฐานข้อมูล (อาจารย์ยังไม่ได้ซิงค์ข้อมูลขึ้น Cloud)');
+    }
+  } catch(e) {
+    showError('ไม่สามารถเชื่อมต่อฐานข้อมูลได้ กรุณาตรวจสอบอินเทอร์เน็ตแล้วสแกนใหม่');
+  }
 }
 
 function renderList(list) {
   const el = document.getElementById('student-list');
-  if(!list.length) { el.innerHTML='<div class="empty">ไม่พบชื่อ</div>'; return; }
-  const att = db.attendance?.[params.rid]?.[params.date]||{};
-  el.innerHTML = list.map((s,i) => {
-    const already = att[s.id] && att[s.id]!=='none';
+  if(!list.length) { el.innerHTML='<div class="empty">ไม่พบรายชื่อ</div>'; return; }
+  
+  el.innerHTML = list.map((s) => {
+    const realIndex = students.findIndex(x => x.id === s.id) + 1;
+    const alreadyStatus = attendance[s.id];
+    let badge = '';
+    
+    if(alreadyStatus && alreadyStatus !== 'none') {
+      badge = alreadyStatus === 'present' ? '<span class="already-badge">✅ เช็คแล้ว</span>' :
+              alreadyStatus === 'late' ? '<span class="already-badge" style="color:var(--amber)">⏰ สาย</span>' :
+              alreadyStatus === 'leave' ? '<span class="already-badge" style="color:var(--blue)">📝 ลา</span>' :
+              '<span class="already-badge" style="color:var(--red)">❌ ขาด</span>';
+    }
+    
     return `<div class="student-item ${s.id===selected?'selected':''}" onclick="selectStudent('${s.id}')">
-      <div class="student-num">${(students.indexOf(s)+1)}</div>
-      <span class="student-name">${s.name}${already?'<span class="already-badge">เช็คแล้ว</span>':''}</span>
+      <div class="student-num">${realIndex}</div>
+      <span class="student-name">${s.name}${badge}</span>
       <span class="check-icon">✓</span>
     </div>`;
   }).join('');
@@ -144,7 +200,7 @@ function renderList(list) {
 
 function filterStudents() {
   const q = document.getElementById('search').value.toLowerCase();
-  const filtered = q ? students.filter(s=>s.name.toLowerCase().includes(q)) : students;
+  const filtered = q ? students.filter(s => s.name.toLowerCase().includes(q)) : students;
   renderList(filtered);
 }
 
@@ -154,30 +210,61 @@ function selectStudent(sid) {
   filterStudents();
 }
 
-function doCheckin() {
+async function doCheckin() {
   if(!selected) return;
-  const student = students.find(s=>s.id===selected);
+  const student = students.find(s => s.id === selected);
   if(!student) return;
 
-  if(!db.attendance) db.attendance={};
-  if(!db.attendance[params.rid]) db.attendance[params.rid]={};
-  if(!db.attendance[params.rid][params.date]) db.attendance[params.rid][params.date]={};
-  db.attendance[params.rid][params.date][selected] = 'present';
-  saveDB(db);
+  const btn = document.getElementById('checkin-btn');
+  const spinner = document.getElementById('btn-spinner');
+  const btnText = document.getElementById('btn-text');
+  
+  btn.disabled = true;
+  spinner.style.display = 'block';
+  btnText.textContent = 'กำลังบันทึก...';
 
-  const now = new Date();
-  document.getElementById('suc-name').textContent = student.name;
-  document.getElementById('suc-room').textContent = 'ห้อง ' + (params.room||'') + ' | ' + now.toLocaleTimeString('th-TH');
-  document.getElementById('suc-time').textContent = 'เวลา ' + now.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'}) + ' น.';
-  document.getElementById('main-section').style.display='none';
-  document.getElementById('success-screen').style.display='flex';
+  try {
+    // ยิง API กลับไปบันทึกว่านักเรียนคนนี้มาเรียน
+    const res = await fetch(params.gasUrl, {
+      method: 'POST',
+      body: JSON.stringify({
+        action: 'checkin',
+        rid: params.rid,
+        roomName: params.room,
+        sid: student.id,
+        studentName: student.name,
+        date: params.date,
+        status: 'present'
+      })
+    });
+    
+    const result = await res.json();
+    if(result.success) {
+      const now = new Date();
+      document.getElementById('suc-name').textContent = student.name;
+      document.getElementById('suc-room').textContent = 'ห้อง ' + (params.room||'');
+      document.getElementById('suc-time').textContent = 'เวลาลงทะเบียน: ' + now.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'}) + ' น.';
+      
+      document.getElementById('main-section').style.display = 'none';
+      document.getElementById('success-screen').style.display = 'flex';
+      
+      // อัปเดตสถานะเผื่อกดเช็คให้เพื่อนคนอื่นต่อ
+      attendance[selected] = 'present';
+    } else {
+      throw new Error('Save Failed');
+    }
+  } catch(e) {
+    alert('บันทึกไม่สำเร็จ! กรุณาลองใหม่อีกครั้ง หรือตรวจสอบอินเทอร์เน็ต');
+    btn.disabled = false;
+    spinner.style.display = 'none';
+    btnText.textContent = '✅ ฉันมาแล้ว!';
+  }
 }
 
 function resetForm() {
   selected = null;
-  db = loadDB();
   document.getElementById('checkin-btn').disabled = true;
-  document.getElementById('main-section').style.display='block';
+  document.getElementById('main-section').style.display='flex';
   document.getElementById('success-screen').style.display='none';
   document.getElementById('search').value='';
   filterStudents();
