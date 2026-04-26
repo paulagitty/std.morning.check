@@ -21,7 +21,7 @@
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: 'Sarabun', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
 
-  /* NAV (ซ่อนไว้ก่อน Login) */
+  /* NAV */
   .nav { background: var(--green-dark); color: #fff; padding: 0 1.5rem; display: none; align-items: center; justify-content: space-between; height: 56px; position: sticky; top: 0; z-index: 100; }
   .nav-brand { font-size: 18px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
   .nav-tabs { display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; }
@@ -34,7 +34,7 @@
   .page { display: none; padding: 1.5rem; max-width: 900px; margin: 0 auto; }
   .page.active { display: block; }
   
-  /* LOGIN PORTAL (หน้าบ้าน) */
+  /* LOGIN PORTAL */
   #page-login { flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 1rem; background: var(--green-dark); }
   #page-login.active { display: flex; }
   .portal-header { text-align: center; color: white; margin-bottom: 2rem; }
@@ -67,7 +67,6 @@
   .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 9px 18px; border-radius: 8px; border: none; cursor: pointer; font-family: inherit; font-size: 14px; font-weight: 500; transition: 0.15s; }
   .btn-primary { background: var(--green); color: #fff; }
   .btn-primary:hover { background: var(--green-dark); }
-  .btn-primary:disabled { background: var(--gray); cursor: not-allowed; }
   .btn-secondary { background: var(--gray-light); color: var(--text); border: 0.5px solid var(--border); }
   .btn-danger { background: var(--red-light); color: var(--red-dark); }
   .btn-sm { padding: 5px 12px; font-size: 13px; }
@@ -97,8 +96,12 @@
   .room-tab { padding: 10px 20px; background: #fff; border: 1.5px solid var(--border); border-radius: 10px; cursor: pointer; white-space: nowrap; font-weight: 600; color: var(--text-muted); font-size: 15px; transition: 0.2s; font-family: inherit; box-shadow: var(--shadow); }
   .room-tab.active { background: var(--green); color: white; border-color: var(--green); box-shadow: 0 4px 12px rgba(29, 158, 117, 0.3); }
   .room-tab:hover:not(.active) { background: var(--green-light); border-color: var(--green); color: var(--green-dark); }
-  
   .bulk-input { width: 100%; height: 120px; resize: vertical; padding: 12px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-family: inherit; font-size: 14px; margin-bottom: 12px; line-height: 1.6; }
+
+  /* REPORT SUB-TABS */
+  .sub-tabs { display: flex; background: var(--gray-light); padding: 4px; border-radius: 10px; margin-bottom: 1rem; }
+  .sub-tab { flex: 1; padding: 8px; border: none; background: transparent; border-radius: 8px; font-family: inherit; font-size: 14px; font-weight: 600; color: var(--text-muted); cursor: pointer; transition: 0.2s; }
+  .sub-tab.active { background: #fff; color: var(--green-dark); box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
 
   /* MODALS & TOASTS */
   .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 200; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
@@ -111,11 +114,30 @@
 
   .section-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; flex-wrap: wrap; gap: 12px; }
   .empty { text-align: center; color: var(--text-muted); padding: 3rem 1rem; font-size: 15px; background: var(--gray-light); border-radius: var(--radius); }
+
+  /* PRINT STYLES (สำหรับ PDF) */
+  @media print {
+    body { background: #fff; color: #000; }
+    .nav, .modal-overlay, .toast, .btn:not(.print-visible), .section-head select, .section-head input { display: none !important; }
+    .page { display: none !important; padding: 0; margin: 0; max-width: 100%; }
+    #page-report { display: block !important; }
+    .sub-tabs { display: none !important; }
+    .card { border: none; box-shadow: none; padding: 0; margin: 0; }
+    .card-title { font-size: 20px; font-weight: bold; border-bottom: 2px solid #000; padding-bottom: 8px; margin-bottom: 16px; }
+    th { background: #f0f0f0 !important; color: #000 !important; -webkit-print-color-adjust: exact; }
+    table { width: 100%; border: 1px solid #ccc; }
+    th, td { border: 1px solid #ccc !important; padding: 8px; font-size: 12px; }
+    .print-header { display: block; text-align: center; margin-bottom: 20px; }
+    .print-header h2 { margin: 0 0 5px 0; }
+    /* บังคับสีพื้นหลังของตารางให้ออกตอนปริ้น */
+    .bg-green { background-color: #E1F5EE !important; -webkit-print-color-adjust: exact; }
+    .bg-red { background-color: #FCEBEB !important; -webkit-print-color-adjust: exact; }
+  }
 </style>
 </head>
 <body>
 
-<!-- ======== PAGE: LOGIN (หน้าบ้าน) ======== -->
+<!-- ======== PAGE: LOGIN ======== -->
 <div id="page-login" class="page active">
   <div class="portal-header">
     <h1>🏫 ระบบลงเวลาเข้าแถว</h1>
@@ -182,7 +204,7 @@
   <div class="nav-tabs">
     <button class="nav-tab active" onclick="showPage('check')">เช็คชื่อ</button>
     <button class="nav-tab" onclick="showPage('report')">รายงาน</button>
-    <button class="nav-tab" onclick="showPage('manage')">จัดการห้อง</button>
+    <button id="tab-manage" class="nav-tab" onclick="showPage('manage')">จัดการห้อง</button>
     <button class="nav-tab" onclick="showPage('settings')">ตั้งค่าระบบ</button>
   </div>
 </nav>
@@ -237,24 +259,73 @@
   </div>
 </div>
 
-<!-- ======== PAGE: รายงาน ======== -->
+<!-- ======== PAGE: รายงาน (ปรับปรุงใหม่ 3 แท็บ) ======== -->
 <div id="page-report" class="page">
+  
+  <div class="print-header" style="display:none;" id="print-header">
+    <h2 id="print-title">รายงานการเข้าแถว</h2>
+    <p id="print-subtitle">ข้อมูล ณ วันที่พิมพ์</p>
+  </div>
+
   <div class="section-head">
-    <h2>รายงานสรุปของฉัน</h2>
-    <div style="display:flex; gap:8px;">
-      <input type="date" id="report-date" style="width:auto;" onchange="genReport()">
-      <select id="report-room" style="width:auto;" onchange="genReport()">
-        <option value="">-- เลือกห้อง --</option>
-      </select>
+    <h2>ระบบรายงาน</h2>
+    <select id="report-room" style="width:auto;" onchange="refreshReportView()">
+      <option value="">-- เลือกห้องเพื่อดูรายงาน --</option>
+    </select>
+  </div>
+
+  <!-- Sub Tabs -->
+  <div class="sub-tabs">
+    <button class="sub-tab active" id="subtab-daily" onclick="setReportTab('daily')">📝 สรุปประจำวัน</button>
+    <button class="sub-tab" id="subtab-monthly" onclick="setReportTab('monthly')">📊 สรุปรายเดือน / เทอม</button>
+    <button class="sub-tab" id="subtab-student" onclick="setReportTab('student')">👤 สถิติรายบุคคล</button>
+  </div>
+
+  <!-- View 1: ประจำวัน (Daily) -->
+  <div id="view-daily">
+    <div class="card" style="margin-bottom:0;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px">
+        <div style="display:flex; align-items:center; gap:12px;">
+          <div class="card-title" style="margin:0">📋 ข้อความสรุปประจำวัน</div>
+          <input type="date" id="report-date" onchange="genReportDaily()" style="width:auto; padding:4px 8px;">
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="copyReportDaily()">📋 คัดลอกส่ง LINE</button>
+      </div>
+      <div id="report-text-daily" style="background:var(--gray-light); padding:1rem; border-radius:8px; white-space:pre-wrap; font-size:14px; min-height:100px;">เลือกห้องและวันที่เพื่อดูรายงาน...</div>
     </div>
   </div>
 
-  <div class="card">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px">
-      <div class="card-title" style="margin:0">📋 สรุปประจำวัน (คัดลอกส่ง LINE)</div>
-      <button class="btn btn-primary btn-sm" onclick="copyReport()">📋 คัดลอกข้อความ</button>
+  <!-- View 2: รายเดือน (Monthly) -->
+  <div id="view-monthly" style="display:none;">
+    <div class="card" style="margin-bottom:0;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+        <div style="display:flex; align-items:center; gap:12px;">
+          <div class="card-title" style="margin:0">ตารางสถิติรายเดือน</div>
+          <input type="month" id="report-month" onchange="genReportMonthly()" style="width:auto; padding:4px 8px;">
+        </div>
+        <button class="btn btn-secondary btn-sm" onclick="printReport()"><span style="font-size:16px">🖨️</span> พิมพ์ / โหลด PDF</button>
+      </div>
+      <div id="report-monthly-content" class="table-wrap">
+        <div class="empty">กรุณาเลือกห้องเรียนเพื่อดูสถิติรายเดือน</div>
+      </div>
     </div>
-    <div id="report-text" style="background:var(--gray-light); padding:1rem; border-radius:8px; white-space:pre-wrap; font-size:14px; min-height:100px;">เลือกห้องและวันที่เพื่อดูรายงาน...</div>
+  </div>
+
+  <!-- View 3: รายบุคคล (Student) -->
+  <div id="view-student" style="display:none;">
+    <div class="card" style="margin-bottom:0;">
+      <div style="display:flex; gap:12px; align-items:center; margin-bottom:16px;">
+        <div class="card-title" style="margin:0">ประวัติของ:</div>
+        <select id="report-student-select" onchange="genReportStudent()" style="flex:1;">
+          <option value="">-- เลือกรายชื่อนักเรียน --</option>
+        </select>
+        <button class="btn btn-secondary btn-sm" onclick="printReport()"><span style="font-size:16px">🖨️</span> พิมพ์</button>
+      </div>
+      
+      <div id="report-student-content">
+        <div class="empty">กรุณาเลือกห้องเรียนและชื่อนักเรียน</div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -272,12 +343,8 @@
     </div>
   </div>
 
-  <!-- แท็บรายชื่อห้อง -->
   <div id="rooms-tabs-container"></div>
-  
-  <!-- พื้นที่แสดงข้อมูลของห้องที่เลือกจากแท็บ -->
   <div id="rooms-content-container"></div>
-
 </div>
 
 <!-- ======== PAGE: ตั้งค่า ======== -->
@@ -337,7 +404,8 @@ let db = {
 let currentTeacherId = null;
 let currentRoom = null;
 let currentPinInput = "";
-let activeRoomTabId = null; // เก็บค่าว่าตอนนี้เปิดแท็บห้องไหนอยู่
+let activeRoomTabId = null;
+let currentReportTab = 'daily';
 
 function save() { localStorage.setItem('attend_db_v3', JSON.stringify(db)); }
 function load() {
@@ -358,10 +426,14 @@ function todayStr() {
   const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
   return d.toISOString().slice(0,10);
 }
+function currentMonthStr() {
+  return todayStr().slice(0,7); // คืนค่า YYYY-MM
+}
 
 // =========== INIT & LOGIN ===========
 document.getElementById('check-date').value = todayStr();
 document.getElementById('report-date').value = todayStr();
+document.getElementById('report-month').value = currentMonthStr();
 
 function initApp() {
   load();
@@ -370,7 +442,7 @@ function initApp() {
 }
 
 function injectMockData() {
-  toast('กำลังสร้างข้อมูลจำลอง กรุณารอสักครู่...');
+  toast('กำลังสร้างข้อมูลจำลอง (ข้อมูลย้อนหลัง 5 วัน) ...');
   setTimeout(() => {
     db = { teachers: {}, rooms: {}, attendance: {}, settings: { sheetUrl: db.settings.sheetUrl } };
     
@@ -379,8 +451,17 @@ function injectMockData() {
     const firstNames = ['สมชาย', 'สมหญิง', 'มานะ', 'มานี', 'ปิติ', 'ชูใจ', 'วีระ', 'เพชร', 'พลอย', 'ฟ้า', 'ตะวัน', 'วิน', 'น้ำ', 'ดิน', 'ไม้', 'ก้อง', 'กล้า', 'แก้ว', 'ขวัญ', 'เอก', 'นพ', 'ดาว', 'เดือน', 'เด่น', 'ชัย'];
     const lastNames = ['ใจดี', 'รักเรียน', 'ขยันยิ่ง', 'มุ่งมั่น', 'สุขสันต์', 'พากเพียร', 'กล้าหาญ', 'รุ่งเรือง', 'สว่างวงศ์', 'ดีเลิศ', 'เจริญทรัพย์', 'มั่นคง', 'ยอดเยี่ยม', 'ประเสริฐ', 'บุญมา'];
     
-    const statuses = ['present', 'present', 'present', 'present', 'present', 'present', 'present', 'late', 'absent', 'leave'];
-    const today = todayStr();
+    const statuses = ['present', 'present', 'present', 'present', 'present', 'present', 'late', 'absent', 'leave'];
+    
+    // สร้างวันที่ย้อนหลัง 5 วันสำหรับทำ Report รายเดือน
+    const datesToMock = [];
+    const d = new Date();
+    for(let k=0; k<5; k++) {
+      let tempD = new Date(d);
+      tempD.setDate(d.getDate() - k);
+      tempD.setMinutes(tempD.getMinutes() - tempD.getTimezoneOffset());
+      datesToMock.push(tempD.toISOString().slice(0,10));
+    }
 
     for (let i = 1; i <= 20; i++) {
       let tId = 't_mock_' + i;
@@ -391,22 +472,29 @@ function injectMockData() {
       db.rooms[rId] = { id: rId, teacherId: tId, name: `ม.${grade}/${sub}`, students: [] };
       
       db.attendance[rId] = {};
-      db.attendance[rId][today] = {};
-
+      
+      // กำหนดนักเรียน
       for (let j = 1; j <= 20; j++) {
         let rName = firstNames[Math.floor(Math.random() * firstNames.length)] + ' ' + lastNames[Math.floor(Math.random() * lastNames.length)];
         let sId = 's_' + rId + '_' + j;
-        
         db.rooms[rId].students.push({ id: sId, name: rName });
-        
-        let randomStatus = statuses[Math.floor(Math.random() * statuses.length)];
-        db.attendance[rId][today][sId] = randomStatus;
       }
+      
+      // สุ่มสถานะ 5 วันย้อนหลัง
+      datesToMock.forEach(dateStr => {
+        db.attendance[rId][dateStr] = {};
+        db.rooms[rId].students.forEach(stu => {
+          // มีโอกาส 80% ที่จะสุ่มสถานะ ถ้าไม่สุ่มคือถือว่าวันนั้นหยุด/ไม่มีการเช็ค
+          if(Math.random() < 0.8) {
+            db.attendance[rId][dateStr][stu.id] = statuses[Math.floor(Math.random() * statuses.length)];
+          }
+        });
+      });
     }
     
     save(); currentTeacherId = null; currentPinInput = "";
     showLogin(); 
-    toast('✅ สร้างข้อมูลสำเร็จ! (มีประวัติเช็คชื่อของวันนี้แล้ว)', 4000);
+    toast('✅ สร้างข้อมูลสำเร็จ! ทดสอบดู Report รายเดือนได้เลย', 4000);
   }, 500);
 }
 
@@ -419,7 +507,7 @@ function showLogin() {
   const sel = document.getElementById('login-teacher-select');
   sel.innerHTML = '<option value="">-- กรุณาเลือกชื่อของคุณ --</option>';
   Object.values(db.teachers).forEach(t => {
-    sel.innerHTML += `<option value="${t.id}">${t.name}</option>`;
+    sel.innerHTML += `<option value="${t.id}">${t.name}${t.id==='t_admin'?' 👑':''}</option>`;
   });
   
   sel.onchange = (e) => {
@@ -471,7 +559,9 @@ function updatePinDots() {
 function verifyLogin() {
   const tid = document.getElementById('login-teacher-select').value;
   if(db.teachers[tid].pin === currentPinInput) {
-    currentTeacherId = tid; toast(`ยินดีต้อนรับ ${db.teachers[tid].name}`); showDashboard();
+    currentTeacherId = tid; 
+    toast(`ยินดีต้อนรับ ${db.teachers[tid].name}`); 
+    showDashboard();
   } else { toast('รหัส PIN ไม่ถูกต้อง!'); clearPin(); }
 }
 function logout() {
@@ -485,6 +575,15 @@ function showDashboard() {
   document.getElementById('page-login').classList.remove('active');
   document.getElementById('main-nav').style.display = 'flex';
   document.getElementById('nav-teacher-name').textContent = "อ." + db.teachers[currentTeacherId].name;
+  
+  // ซ่อน/แสดง แท็บจัดการห้อง ถ้าเป็นแอดมินไม่ให้จัดการห้องคนอื่น เพื่อกันงง
+  if(currentTeacherId === 't_admin') {
+     document.getElementById('tab-manage').style.display = 'none';
+     toast('✨ เข้าระบบด้วยสิทธิ์ Admin (ดูรายงานได้ทุกห้อง)', 4000);
+  } else {
+     document.getElementById('tab-manage').style.display = 'block';
+  }
+  
   showPage('check');
 }
 
@@ -498,7 +597,7 @@ function showPage(name) {
   tabs.forEach(t => { if(t.getAttribute('onclick').includes(name)) t.classList.add('active'); });
 
   if(name==='check') { refreshRoomSelect('room-select'); refreshCheck(); }
-  if(name==='report') { refreshRoomSelect('report-room'); genReport(); }
+  if(name==='report') { refreshRoomSelect('report-room'); refreshReportView(); }
   if(name==='manage') { 
     document.getElementById('manage-teacher-name').textContent = db.teachers[currentTeacherId].name;
     renderRooms(); 
@@ -506,35 +605,51 @@ function showPage(name) {
   if(name==='settings') loadSettingsPage();
 }
 
-function getMyRooms() { return Object.values(db.rooms).filter(r => r.teacherId === currentTeacherId); }
+// ฟังก์ชันหัวใจสำคัญ: Admin เห็นทุกห้อง, อาจารย์ทั่วไปเห็นแค่ห้องตัวเอง
+function getMyRooms() { 
+  if(currentTeacherId === 't_admin') {
+    return Object.values(db.rooms); // คืนค่าห้องทั้งหมดในโรงเรียน
+  }
+  return Object.values(db.rooms).filter(r => r.teacherId === currentTeacherId); 
+}
 
 function refreshRoomSelect(selId) {
   const sel = document.getElementById(selId);
   const myRooms = getMyRooms();
   const cur = sel.value;
-  sel.innerHTML = '<option value="">-- เลือกห้องในความดูแล --</option>' +
-    myRooms.map(r=>`<option value="${r.id}" ${r.id===cur?'selected':''}>${r.name}</option>`).join('');
+  
+  let html = '<option value="">-- เลือกห้อง --</option>';
+  
+  if(currentTeacherId === 't_admin') {
+    // ถ้าเป็นแอดมิน จัดกลุ่มรายชื่อห้องตามอาจารย์ให้ดูง่าย
+    const grouped = {};
+    myRooms.forEach(r => {
+      const tName = db.teachers[r.teacherId]?.name || 'ไม่ระบุ';
+      if(!grouped[tName]) grouped[tName] = [];
+      grouped[tName].push(r);
+    });
+    
+    for(let tName in grouped) {
+      html += `<optgroup label="ครูประจำชั้น: ${tName}">`;
+      grouped[tName].forEach(r => {
+        html += `<option value="${r.id}" ${r.id===cur?'selected':''}>${r.name}</option>`;
+      });
+      html += `</optgroup>`;
+    }
+  } else {
+    html += myRooms.map(r=>`<option value="${r.id}" ${r.id===cur?'selected':''}>${r.name}</option>`).join('');
+  }
+  
+  sel.innerHTML = html;
 }
 
 // =========== MANAGE ROOMS & AUTO-SYNC ===========
-// ฟังก์ชันแอบส่งข้อมูลไปเซฟบน Google Sheets
 async function autoSyncRoomToCloud(roomObj) {
   const gasUrl = db.settings.sheetUrl;
-  if(!gasUrl) return; // ถ้าไม่ได้ใส่ URL ไว้ ก็ให้ข้ามไปเลย
-  
+  if(!gasUrl) return; 
   try {
-    toast('⏳ กำลังอัปเดตรายชื่อขึ้น Google Sheets...', 1500);
-    const res = await fetch(gasUrl, {
-      method: 'POST',
-      body: JSON.stringify({ action: 'syncRoom', room: roomObj })
-    });
-    const result = await res.json();
-    if(result.success) {
-      toast('☁️ ซิงค์เข้า Google Sheets อัตโนมัติเรียบร้อย!', 2000);
-    }
-  } catch(e) {
-    console.error(e);
-  }
+    const res = await fetch(gasUrl, { method: 'POST', body: JSON.stringify({ action: 'syncRoom', room: roomObj }) });
+  } catch(e) {}
 }
 
 function addRoom() {
@@ -542,30 +657,20 @@ function addRoom() {
   if(!name) return toast('กรุณาระบุชื่อห้องเรียน');
   const id = 'r' + Date.now();
   db.rooms[id] = { id, teacherId: currentTeacherId, name, students: [] };
-  save(); 
-  
-  activeRoomTabId = id; // เปลี่ยนแท็บไปหน้าห้องใหม่ทันที
-  renderRooms(); 
+  save(); activeRoomTabId = id; renderRooms(); 
   document.getElementById('new-room-name').value='';
   toast(`สร้างห้อง ${name} สำเร็จ`);
-  
-  autoSyncRoomToCloud(db.rooms[id]); // ส่งไปเซฟบนคลาวด์
+  autoSyncRoomToCloud(db.rooms[id]);
 }
 
 function deleteRoom(id) {
   if(!confirm('ยืนยันการลบห้องเรียนนี้? ข้อมูลนักเรียนทั้งหมดจะหายไป')) return;
-  delete db.rooms[id]; 
-  save(); 
-  
-  // ถ้าลบแท็บที่เปิดอยู่ ให้เคลียร์ค่าทิ้ง
+  delete db.rooms[id]; save(); 
   if(activeRoomTabId === id) activeRoomTabId = null;
   renderRooms();
 }
 
-function switchRoomTab(rid) {
-  activeRoomTabId = rid;
-  renderRooms();
-}
+function switchRoomTab(rid) { activeRoomTabId = rid; renderRooms(); }
 
 function renderRooms() {
   const tabsEl = document.getElementById('rooms-tabs-container');
@@ -578,19 +683,14 @@ function renderRooms() {
     return; 
   }
   
-  // ถ้าไม่ได้เลือกแท็บไหน ให้เลือกแท็บแรกสุดอัตโนมัติ
-  if(!activeRoomTabId || !myRooms.find(r => r.id === activeRoomTabId)) {
-    activeRoomTabId = myRooms[0].id;
-  }
+  if(!activeRoomTabId || !myRooms.find(r => r.id === activeRoomTabId)) { activeRoomTabId = myRooms[0].id; }
   
-  // สร้างปุ่มแท็บ
   tabsEl.innerHTML = myRooms.map(r => `
     <button class="room-tab ${r.id === activeRoomTabId ? 'active' : ''}" onclick="switchRoomTab('${r.id}')">
       ${r.name} <span style="font-size:12px; opacity:0.8;">(${r.students.length})</span>
     </button>
   `).join('');
   
-  // สร้างเนื้อหาของห้องที่เลือก (ช่องก๊อปปี้วาง และตารางรายชื่อ)
   const activeRoom = myRooms.find(r => r.id === activeRoomTabId);
   
   contentEl.innerHTML = `
@@ -600,18 +700,15 @@ function renderRooms() {
         <button class="btn btn-danger btn-sm" onclick="deleteRoom('${activeRoom.id}')">🗑️ ลบห้องนี้ทิ้ง</button>
       </div>
 
-      <!-- กล่อง Bulk Add (เพิ่มทีละหลายคน) -->
       <div style="background: var(--green-light); padding: 1rem; border-radius: 12px; margin-bottom: 1.5rem;">
         <label style="font-weight: 600; color: var(--green-dark); font-size:14px;">➕ เพิ่มรายชื่อนักเรียน (ก๊อปปี้วางได้เลย)</label>
         <p style="font-size: 13px; color: var(--green-dark); opacity: 0.8; margin-bottom: 8px;">
-          * พิมพ์หรือวางรายชื่อนักเรียน (ให้แต่ละคนอยู่คนละบรรทัด) จากนั้นกดปุ่มสีเขียว<br>
-          * ระบบจะบันทึกและซิงค์เข้า Google Sheets ให้อัตโนมัติทันที
+          * พิมพ์หรือวางรายชื่อนักเรียน (ให้แต่ละคนอยู่คนละบรรทัด) จากนั้นกดปุ่มสีเขียว
         </p>
-        <textarea id="bulk-students-${activeRoom.id}" class="bulk-input" placeholder="ตัวอย่างการวางรายชื่อ:&#10;เด็กชายสมชาย มั่นคง&#10;เด็กหญิงสมหญิง ใจดี&#10;นายนพดล รุ่งเรือง"></textarea>
+        <textarea id="bulk-students-${activeRoom.id}" class="bulk-input" placeholder="ตัวอย่างการวางรายชื่อ:&#10;เด็กชายสมชาย มั่นคง&#10;เด็กหญิงสมหญิง ใจดี"></textarea>
         <button class="btn btn-primary" onclick="bulkAddStudents('${activeRoom.id}')">💾 บันทึกรายชื่อทั้งหมด</button>
       </div>
 
-      <!-- ตารางรายชื่อ -->
       <div class="table-wrap">
         <table>
           <thead><tr><th style="width:40px; text-align:center;">เลขที่</th><th>ชื่อ-นามสกุล</th><th style="width:60px">ลบ</th></tr></thead>
@@ -629,39 +726,29 @@ function renderRooms() {
   `;
 }
 
-// ฟังก์ชันสำหรับเพิ่มหลายคนรวดเดียว (Bulk Add)
 async function bulkAddStudents(rid) {
   const textarea = document.getElementById('bulk-students-' + rid);
-  const lines = textarea.value.split('\n'); // แยกด้วยการขึ้นบรรทัดใหม่
+  const lines = textarea.value.split('\n'); 
   let addedCount = 0;
 
   lines.forEach(line => {
     const name = line.trim();
-    if (name) { // ถ้าไม่ใช่บรรทัดว่าง
-      // สร้าง ID เฉพาะตัวด้วยเวลาปัจจุบัน + สุ่มเลข เพื่อไม่ให้ซ้ำ
+    if (name) { 
       db.rooms[rid].students.push({ id: 's' + Date.now() + Math.random().toString(36).substring(2, 9), name: name });
       addedCount++;
     }
   });
 
   if (addedCount > 0) {
-    save();
-    renderRooms(); // รีเฟรชหน้าจอใหม่
-    textarea.value = ''; // เคลียร์กล่องข้อความ
-    toast(`✅ เพิ่มนักเรียน ${addedCount} คน เรียบร้อย!`);
-    
-    // อัปเดตข้อมูลชุดใหม่ขึ้น Google Sheets ทันที!
+    save(); renderRooms(); textarea.value = ''; toast(`✅ เพิ่มนักเรียน ${addedCount} คน เรียบร้อย!`);
     await autoSyncRoomToCloud(db.rooms[rid]);
-  } else {
-    toast('⚠️ กรุณาวางรายชื่อนักเรียนก่อนกดบันทึก');
-  }
+  } else { toast('⚠️ กรุณาวางรายชื่อนักเรียนก่อนกดบันทึก'); }
 }
 
 async function deleteStudent(rid, sid) {
   db.rooms[rid].students = db.rooms[rid].students.filter(s=>s.id!==sid);
-  save(); 
-  renderRooms();
-  await autoSyncRoomToCloud(db.rooms[rid]); // ลบเสร็จ อัปเดตชีตด้วย
+  save(); renderRooms();
+  await autoSyncRoomToCloud(db.rooms[rid]); 
 }
 
 // =========== CHECK ATTENDANCE ===========
@@ -736,26 +823,18 @@ async function openQR() {
   if(!gasUrl) return toast('⚠️ กรุณาไปที่ "ตั้งค่า" และให้ Admin ใส่ Google Sheets URL ก่อนสร้าง QR');
 
   const btn = document.getElementById('btn-create-qr');
-  btn.disabled = true;
-  btn.textContent = 'กำลังเตรียม QR...';
+  btn.disabled = true; btn.textContent = 'กำลังเตรียม QR...';
   
   try {
-    const res = await fetch(gasUrl, {
-      method: 'POST',
-      body: JSON.stringify({ action: 'syncRoom', room: currentRoom })
-    });
-    const result = await res.json();
-    if(result.success) toast('✅ ซิงค์ห้องเรียนสำเร็จ เปิด QR Code แล้ว');
-    else throw new Error();
+    await fetch(gasUrl, { method: 'POST', body: JSON.stringify({ action: 'syncRoom', room: currentRoom }) });
+    toast('✅ พร้อมสแกนแล้ว');
   } catch(e) {
     toast('❌ ซิงค์ล้มเหลว ตรวจสอบ URL หรืออินเทอร์เน็ต');
-    btn.disabled = false;
-    btn.textContent = '📱 1. สร้าง QR ให้นักเรียนสแกน';
+    btn.disabled = false; btn.textContent = '📱 1. สร้าง QR ให้นักเรียนสแกน';
     return;
   }
 
-  btn.disabled = false;
-  btn.textContent = '📱 1. สร้าง QR ให้นักเรียนสแกน';
+  btn.disabled = false; btn.textContent = '📱 1. สร้าง QR ให้นักเรียนสแกน';
 
   const dateStr = getSelectedDate('check-date');
   const modal = document.getElementById('qr-modal');
@@ -764,11 +843,7 @@ async function openQR() {
   
   const base = window.location.origin + '/checkin.html';
   const url = `${base}?rid=${currentRoom.id}&date=${dateStr}&room=${encodeURIComponent(currentRoom.name)}&gas=${encodeURIComponent(gasUrl)}`;
-  
-  new QRCode(document.getElementById('qr-container'), {
-    text: url, width: 220, height: 220, colorDark:'#085041', colorLight:'#E1F5EE', correctLevel: QRCode.CorrectLevel.M
-  });
-  
+  new QRCode(document.getElementById('qr-container'), { text: url, width: 220, height: 220, colorDark:'#085041', colorLight:'#E1F5EE', correctLevel: QRCode.CorrectLevel.M });
   modal.classList.add('open');
 }
 function closeQR() { document.getElementById('qr-modal').classList.remove('open'); }
@@ -782,21 +857,15 @@ async function pullDataFromSheets() {
   toast('กำลังดึงข้อมูล...');
   
   try {
-    const res = await fetch(gasUrl, {
-      method: 'POST',
-      body: JSON.stringify({ action: 'getAttendance', rid: currentRoom.id, date: dateStr })
-    });
+    const res = await fetch(gasUrl, { method: 'POST', body: JSON.stringify({ action: 'getAttendance', rid: currentRoom.id, date: dateStr }) });
     const liveAtt = await res.json(); 
     
     if(!db.attendance[currentRoom.id]) db.attendance[currentRoom.id] = {};
     if(!db.attendance[currentRoom.id][dateStr]) db.attendance[currentRoom.id][dateStr] = {};
     
-    Object.keys(liveAtt).forEach(sid => {
-      db.attendance[currentRoom.id][dateStr][sid] = liveAtt[sid];
-    });
+    Object.keys(liveAtt).forEach(sid => { db.attendance[currentRoom.id][dateStr][sid] = liveAtt[sid]; });
     
-    save(); renderStudentTable(); updateStats();
-    toast('✅ อัปเดตข้อมูลสำเร็จ');
+    save(); renderStudentTable(); updateStats(); toast('✅ อัปเดตข้อมูลสำเร็จ');
   } catch(e) { toast('❌ ดึงข้อมูลไม่สำเร็จ'); }
 }
 
@@ -807,11 +876,11 @@ async function saveToSheets() {
   
   const dateStr = getSelectedDate('check-date');
   const att = db.attendance[currentRoom.id]?.[dateStr]||{};
-  const teacher = db.teachers[currentTeacherId];
+  const teacher = db.teachers[currentRoom.teacherId];
   
   const rows = currentRoom.students.map(s => ({
     date: dateStr, rid: currentRoom.id, roomName: currentRoom.name, 
-    sid: s.id, studentName: s.name, status: att[s.id]||'none', teacher: teacher.name
+    sid: s.id, studentName: s.name, status: att[s.id]||'none', teacher: teacher?teacher.name:''
   })).filter(r => r.status !== 'none'); 
   
   try {
@@ -821,30 +890,61 @@ async function saveToSheets() {
   } catch(e) { toast('❌ เกิดข้อผิดพลาด'); }
 }
 
-// =========== REPORT ===========
-function genReport() {
+
+// =========== REPORT SYSTEM (ใหม่ 3 แท็บ) ===========
+function setReportTab(tabName) {
+  currentReportTab = tabName;
+  document.querySelectorAll('.sub-tab').forEach(b => b.classList.remove('active'));
+  document.getElementById('subtab-'+tabName).classList.add('active');
+  
+  document.getElementById('view-daily').style.display = tabName === 'daily' ? 'block' : 'none';
+  document.getElementById('view-monthly').style.display = tabName === 'monthly' ? 'block' : 'none';
+  document.getElementById('view-student').style.display = tabName === 'student' ? 'block' : 'none';
+  
+  refreshReportView();
+}
+
+function refreshReportView() {
+  const rid = document.getElementById('report-room').value;
+  
+  // โหลดรายชื่อเด็กใส่ Dropdown ในแท็บ "รายบุคคล" เผื่อไว้
+  const studentSel = document.getElementById('report-student-select');
+  if(rid && db.rooms[rid]) {
+    studentSel.innerHTML = '<option value="">-- เลือกรายชื่อนักเรียน --</option>' + 
+      db.rooms[rid].students.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+  } else {
+    studentSel.innerHTML = '<option value="">-- เลือกรายชื่อนักเรียน --</option>';
+  }
+
+  if(currentReportTab === 'daily') genReportDaily();
+  else if(currentReportTab === 'monthly') genReportMonthly();
+  else if(currentReportTab === 'student') genReportStudent();
+}
+
+// 1. สรุปประจำวัน (ก๊อปปี้ส่งไลน์)
+function genReportDaily() {
   const rid = document.getElementById('report-room').value;
   const dateStr = getSelectedDate('report-date');
-  if(!rid || !dateStr) { document.getElementById('report-text').textContent = 'เลือกห้องและวันที่เพื่อดูรายงาน...'; return; }
+  const txtEl = document.getElementById('report-text-daily');
+  
+  if(!rid || !dateStr) { txtEl.textContent = 'เลือกห้องและวันที่เพื่อดูรายงาน...'; return; }
   
   const room = db.rooms[rid];
-  const teacher = db.teachers[currentTeacherId];
+  const teacher = db.teachers[room.teacherId];
   const att = db.attendance[rid]?.[dateStr] || {};
   
   const absent=[], late=[], leave=[], present=[];
-  room.students.forEach((s, i)=>{
+  room.students.forEach((s)=>{
     const v = att[s.id]||'none';
-    const nameStr = `${s.name}`;
-    if(v==='absent') absent.push(nameStr); else if(v==='late') late.push(nameStr);
-    else if(v==='leave') leave.push(nameStr); else if(v==='present') present.push(nameStr);
+    if(v==='absent') absent.push(s.name); else if(v==='late') late.push(s.name);
+    else if(v==='leave') leave.push(s.name); else if(v==='present') present.push(s.name);
   });
 
-  let txt = `📋 รายงานเช็คชื่อเข้าแถว\n📅 ประจำวันที่: ${formatThaiDate(dateStr)}\n🚪 ห้อง: ${room.name}\n👨‍🏫 ครูประจำชั้น: ${teacher.name}\n━━━━━━━━━━━━━━━━\n`;
+  let txt = `📋 รายงานเช็คชื่อเข้าแถว\n📅 ประจำวันที่: ${formatThaiDate(dateStr)}\n🚪 ห้อง: ${room.name}\n👨‍🏫 ครูประจำชั้น: ${teacher?teacher.name:'-'}\n━━━━━━━━━━━━━━━━\n`;
   txt += `✅ มา: ${present.length} | ⏰ สาย: ${late.length} | ❌ ขาด: ${absent.length} | 📝 ลา: ${leave.length}\n👥 ยอดรวม: ${room.students.length} คน\n`;
   
   if(absent.length > 0 || late.length > 0 || leave.length > 0) {
     txt += `━━━━━━━━━━━━━━━━\n`;
-    
     if(absent.length > 0) {
       txt += `❌ รายชื่อขาด (${absent.length} คน):\n`;
       absent.forEach((name, idx) => txt += `   ${idx+1}. ${name}\n`);
@@ -864,12 +964,11 @@ function genReport() {
   } else {
     txt += `━━━━━━━━━━━━━━━━\n✅ นักเรียนมาครบทุกคน ยอดเยี่ยมมากครับ! 🎉`;
   }
-
-  document.getElementById('report-text').textContent = txt.trim();
+  txtEl.textContent = txt.trim();
 }
 
-function copyReport() {
-  const txt = document.getElementById('report-text').textContent;
+function copyReportDaily() {
+  const txt = document.getElementById('report-text-daily').textContent;
   if(!txt || txt.includes('เลือกห้อง')) return;
   if(navigator.clipboard) {
     navigator.clipboard.writeText(txt).then(()=>toast('คัดลอกข้อความสำเร็จ! นำไปวางใน LINE ได้เลย'));
@@ -877,6 +976,139 @@ function copyReport() {
     const ta = document.createElement('textarea'); ta.value=txt; document.body.appendChild(ta); ta.select();
     document.execCommand('copy'); document.body.removeChild(ta); toast('คัดลอกข้อความสำเร็จ!');
   }
+}
+
+// 2. สรุปรายเดือน (ตารางสถิติเพื่อ Print/PDF)
+function genReportMonthly() {
+  const rid = document.getElementById('report-room').value;
+  const monthStr = document.getElementById('report-month').value; // YYYY-MM
+  const el = document.getElementById('report-monthly-content');
+  
+  if(!rid || !monthStr) { el.innerHTML = '<div class="empty">กรุณาเลือกห้องและเดือน/ปี</div>'; return; }
+  
+  const room = db.rooms[rid];
+  // หาว่าเดือนที่เลือก มีการเช็คชื่อกี่วัน
+  const allDatesInRoom = Object.keys(db.attendance[rid] || {});
+  const datesInMonth = allDatesInRoom.filter(d => d.startsWith(monthStr)).sort();
+  
+  if(datesInMonth.length === 0) {
+    el.innerHTML = `<div class="empty">ไม่มีข้อมูลการเช็คชื่อในเดือน ${monthStr}</div>`;
+    return;
+  }
+
+  // เซ็ต Title สำหรับหัวกระดาษตอนปริ้น
+  const thaiMonth = new Date(monthStr+'-01').toLocaleDateString('th-TH', {month:'long', year:'numeric'});
+  document.getElementById('print-title').textContent = `สถิติการมาเรียน ประจำเดือน ${thaiMonth}`;
+  document.getElementById('print-subtitle').textContent = `ห้อง: ${room.name} | จำนวนวันที่มีการเช็คชื่อ: ${datesInMonth.length} วัน`;
+
+  let html = `
+    <table>
+      <thead>
+        <tr>
+          <th style="width:40px; text-align:center;">เลขที่</th>
+          <th>ชื่อ-นามสกุล</th>
+          <th style="text-align:center; color:var(--green-dark);">มา</th>
+          <th style="text-align:center; color:var(--amber-dark);">สาย</th>
+          <th style="text-align:center; color:var(--red-dark);">ขาด</th>
+          <th style="text-align:center; color:var(--blue-dark);">ลา</th>
+          <th style="text-align:center;">% การมาเรียน</th>
+        </tr>
+      </thead>
+      <tbody>
+  `;
+
+  room.students.forEach((stu, index) => {
+    let p=0, l=0, a=0, lv=0;
+    datesInMonth.forEach(date => {
+      const st = db.attendance[rid][date][stu.id];
+      if(st==='present') p++; else if(st==='late') l++; else if(st==='absent') a++; else if(st==='leave') lv++;
+    });
+    
+    const totalChecks = p + l + a + lv; // วันที่เด็กคนนี้ถูกเช็คสถานะจริงๆ
+    // (มา + สาย) ถือว่ามาโรงเรียน
+    const presentPercent = totalChecks > 0 ? Math.round(((p+l) / totalChecks) * 100) : 0;
+    
+    // ไฮไลท์ถ้ามาเรียนต่ำกว่า 80%
+    const percentColor = presentPercent < 80 && totalChecks > 0 ? 'color:var(--red); font-weight:bold;' : 'color:var(--green); font-weight:bold;';
+
+    html += `
+      <tr>
+        <td style="text-align:center; color:var(--text-muted);">${index+1}</td>
+        <td>${stu.name}</td>
+        <td style="text-align:center;" class="bg-green">${p}</td>
+        <td style="text-align:center;">${l}</td>
+        <td style="text-align:center;" class="bg-red">${a}</td>
+        <td style="text-align:center;">${lv}</td>
+        <td style="text-align:center; ${percentColor}">${totalChecks > 0 ? presentPercent+'%' : '-'}</td>
+      </tr>
+    `;
+  });
+
+  html += `</tbody></table>`;
+  el.innerHTML = html;
+}
+
+// 3. สถิติรายบุคคล
+function genReportStudent() {
+  const rid = document.getElementById('report-room').value;
+  const sid = document.getElementById('report-student-select').value;
+  const el = document.getElementById('report-student-content');
+  
+  if(!rid || !sid) { el.innerHTML = '<div class="empty">กรุณาเลือกห้องและนักเรียน</div>'; return; }
+  
+  const room = db.rooms[rid];
+  const stu = room.students.find(s => s.id === sid);
+  
+  // ดึงวันทั้งหมดที่มีการเช็คชื่อในห้องนี้ แล้วหาข้อมูลของเด็กคนนี้
+  const allDates = Object.keys(db.attendance[rid] || {}).sort().reverse(); // เอาวันล่าสุดขึ้นก่อน
+  let p=0, l=0, a=0, lv=0;
+  let historyHtml = '';
+  
+  allDates.forEach(date => {
+    const st = db.attendance[rid][date][stu.id];
+    if(st && st !== 'none') {
+      if(st==='present') p++; else if(st==='late') l++; else if(st==='absent') a++; else if(st==='leave') lv++;
+      
+      const badge = st==='present' ? '<span style="color:var(--green)">✅ มาเรียน</span>' :
+                    st==='late' ? '<span style="color:var(--amber)">⏰ มาสาย</span>' :
+                    st==='absent' ? '<span style="color:var(--red)">❌ ขาดเรียน</span>' :
+                    '<span style="color:var(--blue)">📝 ลา</span>';
+                    
+      historyHtml += `
+        <div style="display:flex; justify-content:space-between; padding:10px; border-bottom:1px solid var(--border);">
+          <span>📅 ${formatThaiDate(date)}</span>
+          <strong>${badge}</strong>
+        </div>
+      `;
+    }
+  });
+
+  const total = p+l+a+lv;
+  
+  // เซ็ต Title สำหรับหัวกระดาษตอนปริ้น
+  document.getElementById('print-title').textContent = `รายงานการเข้าเรียนรายบุคคล`;
+  document.getElementById('print-subtitle').textContent = `ชื่อ: ${stu.name} | ห้อง: ${room.name}`;
+
+  el.innerHTML = `
+    <div class="stats-grid" style="margin-bottom:1rem;">
+      <div class="stat green"><div class="stat-n">${p}</div><div class="stat-label">มาเรียน (ครั้ง)</div></div>
+      <div class="stat amber"><div class="stat-n">${l}</div><div class="stat-label">มาสาย (ครั้ง)</div></div>
+      <div class="stat red"><div class="stat-n">${a}</div><div class="stat-label">ขาด (ครั้ง)</div></div>
+      <div class="stat blue"><div class="stat-n">${lv}</div><div class="stat-label">ลา (ครั้ง)</div></div>
+    </div>
+    
+    <div style="background:var(--gray-light); border-radius:12px; padding:1rem;">
+      <h4 style="margin-top:0; margin-bottom:12px;">ประวัติย้อนหลัง</h4>
+      ${historyHtml || '<div class="empty">ไม่มีประวัติการเช็คชื่อ</div>'}
+    </div>
+  `;
+}
+
+// ฟังก์ชันสั่งพิมพ์ (Print/Save as PDF)
+function printReport() {
+  const rid = document.getElementById('report-room').value;
+  if(!rid) return toast('กรุณาเลือกห้องก่อนพิมพ์รายงาน');
+  window.print();
 }
 
 // =========== SETTINGS ===========
