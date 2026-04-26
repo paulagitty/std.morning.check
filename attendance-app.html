@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ระบบเช็คชื่อเข้าแถว</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+  :root {
+    --green: #1D9E75; --green-light: #E1F5EE; --green-dark: #085041;
+    --amber: #BA7517; --amber-light: #FAEEDA; --amber-dark: #633806;
+    --red: #E24B4A; --red-light: #FCEBEB; --red-dark: #501313;
+    --blue: #378ADD; --blue-light: #E6F1FB; --blue-dark: #042C53;
+    --gray: #5F5E5A; --gray-light: #F1EFE8; --gray-dark: #2C2C2A;
+    --bg: #f8f7f4; --card: #ffffff; --border: rgba(0,0,0,0.1);
+    --text: #1a1a18; --text-muted: #6b6b67;
+    --radius: 12px; --radius-sm: 8px;
+    --shadow: 0 2px 12px rgba(0,0,0,0.08);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Sarabun', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  /* NAV */
+  .nav { background: var(--green-dark); color: #fff; padding: 0 1.5rem; display: flex; align-items: center; justify-content: space-between; height: 56px; position: sticky; top: 0; z-index: 100; }
+  .nav-brand { font-size: 18px; font-weight: 600; letter-spacing: -0.3px; }
+  .nav-tabs { display: flex; gap: 4px; }
+  .nav-tab { background: none; border: none; color: rgba(255,255,255,0.65); padding: 6px 14px; border-radius: 20px; cursor: pointer; font-family: 'Sarabun',sans-serif; font-size: 14px; transition: all 0.15s; white-space: nowrap; }
+  .nav-tab.active, .nav-tab:hover { background: rgba(255,255,255,0.15); color: #fff; }
+
+  /* LAYOUT */
+  .page { display: none; padding: 1.5rem; max-width: 900px; margin: 0 auto; }
+  .page.active { display: block; }
+
+  /* CARDS */
+  .card { background: var(--card); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 1.25rem; margin-bottom: 1rem; }
+  .card-title { font-size: 16px; font-weight: 600; margin-bottom: 1rem; color: var(--text); display: flex; align-items: center; gap: 8px; }
+
+  /* STATS */
+  .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px,1fr)); gap: 10px; margin-bottom: 1.25rem; }
+  .stat { background: var(--gray-light); border-radius: var(--radius-sm); padding: 14px; text-align: center; }
+  .stat-n { font-size: 28px; font-weight: 700; line-height: 1; }
+  .stat-label { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+  .stat.green .stat-n { color: var(--green); }
+  .stat.amber .stat-n { color: var(--amber); }
+  .stat.red .stat-n { color: var(--red); }
+  .stat.blue .stat-n { color: var(--blue); }
+
+  /* BUTTONS */
+  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 9px 18px; border-radius: 8px; border: none; cursor: pointer; font-family: 'Sarabun',sans-serif; font-size: 14px; font-weight: 500; transition: all 0.15s; }
+  .btn-primary { background: var(--green); color: #fff; }
+  .btn-primary:hover { background: var(--green-dark); }
+  .btn-secondary { background: var(--gray-light); color: var(--text); border: 0.5px solid var(--border); }
+  .btn-secondary:hover { background: #e5e4de; }
+  .btn-danger { background: var(--red-light); color: var(--red-dark); }
+  .btn-danger:hover { background: #f7c1c1; }
+  .btn-blue { background: var(--blue); color: #fff; }
+  .btn-blue:hover { background: var(--blue-dark); }
+  .btn-sm { padding: 5px 12px; font-size: 13px; }
+  .btn-icon { width: 34px; height: 34px; padding: 0; justify-content: center; border-radius: var(--radius-sm); }
+
+  /* FORMS */
+  input, select, textarea { width: 100%; padding: 9px 12px; border: 0.5px solid var(--border); border-radius: var(--radius-sm); font-family: 'Sarabun',sans-serif; font-size: 14px; background: #fff; color: var(--text); }
+  input:focus, select:focus { outline: none; border-color: var(--green); box-shadow: 0 0 0 3px rgba(29,158,117,0.15); }
+  label { font-size: 13px; color: var(--text-muted); margin-bottom: 4px; display: block; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+  .form-group { margin-bottom: 12px; }
+
+  /* TABLE */
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th { text-align: left; padding: 10px 12px; background: var(--gray-light); font-weight: 600; font-size: 13px; color: var(--text-muted); border-bottom: 1px solid var(--border); }
+  td { padding: 10px 12px; border-bottom: 0.5px solid var(--border); }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #fafaf8; }
+
+  /* STATUS PILLS */
+  .pill { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 500; }
+  .pill-present { background: var(--green-light); color: var(--green-dark); }
+  .pill-absent { background: var(--red-light); color: var(--red-dark); }
+  .pill-late { background: var(--amber-light); color: var(--amber-dark); }
+  .pill-leave { background: var(--blue-light); color: var(--blue-dark); }
+  .pill-none { background: var(--gray-light); color: var(--gray); }
+
+  /* ATTENDANCE BUTTONS */
+  .att-btn { width: 100%; padding: 8px 6px; border-radius: 6px; border: 1px solid var(--border); cursor: pointer; font-family: 'Sarabun',sans-serif; font-size: 13px; font-weight: 500; transition: all 0.12s; background: #fff; color: var(--text-muted); }
+  .att-btn:hover { border-color: var(--green); }
+  .att-btn.sel-present { background: var(--green-light); border-color: var(--green); color: var(--green-dark); }
+  .att-btn.sel-absent { background: var(--red-light); border-color: var(--red); color: var(--red-dark); }
+  .att-btn.sel-late { background: var(--amber-light); border-color: var(--amber); color: var(--amber-dark); }
+  .att-btn.sel-leave { background: var(--blue-light); border-color: var(--blue); color: var(--blue-dark); }
+
+  /* QR MODAL */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 200; align-items: center; justify-content: center; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: #fff; border-radius: 16px; padding: 2rem; max-width: 400px; width: 90%; text-align: center; }
+  .modal h2 { font-size: 18px; margin-bottom: 6px; }
+  .modal p { color: var(--text-muted); font-size: 13px; margin-bottom: 1.5rem; }
+  #qr-container { display: flex; justify-content: center; margin-bottom: 1.5rem; }
+  #qr-container img, #qr-container canvas { border-radius: 8px; border: 4px solid var(--green-light); }
+
+  /* REPORT BOX */
+  .report-box { background: var(--gray-light); border: 0.5px solid var(--border); border-radius: var(--radius-sm); padding: 1rem; font-size: 14px; line-height: 1.9; white-space: pre-wrap; font-family: 'Sarabun', sans-serif; min-height: 80px; }
+
+  /* TOAST */
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--gray-dark); color: #fff; padding: 10px 20px; border-radius: 8px; font-size: 14px; z-index: 999; opacity: 0; transition: opacity 0.2s; pointer-events: none; }
+  .toast.show { opacity: 1; }
+
+  /* MISC */
+  .section-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; flex-wrap: wrap; gap: 8px; }
+  .section-head h2 { font-size: 20px; font-weight: 700; }
+  .chip { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 20px; font-size: 12px; background: var(--green-light); color: var(--green-dark); font-weight: 500; }
+  .empty { text-align: center; color: var(--text-muted); padding: 2.5rem 1rem; font-size: 14px; }
+  .flex-gap { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .divider { border: none; border-top: 0.5px solid var(--border); margin: 1rem 0; }
+  .room-tag { display: inline-block; background: var(--blue-light); color: var(--blue-dark); padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 500; }
+
+  @media (max-width: 600px) {
+    .nav-brand { font-size: 15px; }
+    .nav-tab { padding: 5px 10px; font-size: 13px; }
+    .form-row { grid-template-columns: 1fr; }
+    .page { padding: 1rem; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-brand">📋 เช็คชื่อเข้าแถว</div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showPage('check')">เช็คชื่อ</button>
+    <button class="nav-tab" onclick="showPage('report')">รายงาน</button>
+    <button class="nav-tab" onclick="showPage('manage')">จัดการ</button>
+    <button class="nav-tab" onclick="showPage('settings')">ตั้งค่า</button>
+  </div>
+</nav>
+
+<!-- ======== PAGE: เช็คชื่อ ======== -->
+<div id="page-check" class="page active">
+  <div class="section-head">
+    <h2>เช็คชื่อประจำวัน</h2>
+    <div class="flex-gap">
+      <span id="today-label" style="font-size:14px;color:var(--text-muted)"></span>
+      <select id="room-select" style="width:auto;font-size:14px" onchange="loadRoom()">
+        <option value="">-- เลือกห้อง --</option>
+      </select>
+    </div>
+  </div>
+
+  <div id="check-empty" class="empty">กรุณาเลือกห้องเรียน หรือเพิ่มห้องในเมนู "จัดการ"</div>
+
+  <div id="check-content" style="display:none">
+    <div class="stats-grid">
+      <div class="stat green"><div class="stat-n" id="s-present">0</div><div class="stat-label">มาเรียน</div></div>
+      <div class="stat amber"><div class="stat-n" id="s-late">0</div><div class="stat-label">มาสาย</div></div>
+      <div class="stat red"><div class="stat-n" id="s-absent">0</div><div class="stat-label">ขาด</div></div>
+      <div class="stat blue"><div class="stat-n" id="s-leave">0</div><div class="stat-label">ลา</div></div>
+      <div class="stat"><div class="stat-n" id="s-total">0</div><div class="stat-label">ทั้งหมด</div></div>
+    </div>
+
+    <div class="flex-gap" style="margin-bottom:1rem">
+      <button class="btn btn-primary" onclick="openQR()">📱 QR สแกนเช็คชื่อ</button>
+      <button class="btn btn-secondary" onclick="markAll('present')">✅ มาทั้งหมด</button>
+      <button class="btn btn-secondary btn-sm" onclick="saveToSheets()">💾 บันทึก Sheets</button>
+    </div>
+
+    <div class="card" style="padding:0;overflow:hidden">
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:36px">#</th>
+              <th>ชื่อ-นามสกุล</th>
+              <th style="width:80px;text-align:center">มา</th>
+              <th style="width:80px;text-align:center">สาย</th>
+              <th style="width:80px;text-align:center">ขาด</th>
+              <th style="width:80px;text-align:center">ลา</th>
+            </tr>
+          </thead>
+          <tbody id="student-table"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ======== PAGE: รายงาน ======== -->
+<div id="page-report" class="page">
+  <div class="section-head">
+    <h2>รายงานสรุป</h2>
+    <select id="report-room" style="width:auto;font-size:14px" onchange="genReport()">
+      <option value="">-- เลือกห้อง --</option>
+    </select>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📊 สถิติรายเดือน</div>
+    <div id="report-stats" class="empty">เลือกห้องเพื่อดูรายงาน</div>
+  </div>
+
+  <div class="card" id="daily-report-card">
+    <div class="flex-gap" style="justify-content:space-between;margin-bottom:12px">
+      <div class="card-title" style="margin:0">📋 สรุปวันนี้ (คัดลอกส่ง LINE)</div>
+      <button class="btn btn-primary btn-sm" onclick="copyReport()">📋 คัดลอก</button>
+    </div>
+    <div id="report-text" class="report-box">เลือกห้องเพื่อสร้างรายงาน...</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📅 ประวัติการเช็คชื่อ</div>
+    <div id="history-table" class="empty">ยังไม่มีข้อมูล</div>
+  </div>
+</div>
+
+<!-- ======== PAGE: จัดการ ======== -->
+<div id="page-manage" class="page">
+  <div class="section-head"><h2>จัดการห้องและนักเรียน</h2></div>
+
+  <div class="card">
+    <div class="card-title">➕ เพิ่มห้องเรียนใหม่</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>ชื่อห้อง (เช่น ม.2/1)</label>
+        <input type="text" id="new-room-name" placeholder="ม.2/1">
+      </div>
+      <div class="form-group">
+        <label>ระดับชั้น</label>
+        <input type="text" id="new-room-grade" placeholder="มัธยม 2">
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="addRoom()">➕ เพิ่มห้องเรียน</button>
+  </div>
+
+  <div id="rooms-list"></div>
+</div>
+
+<!-- ======== PAGE: ตั้งค่า ======== -->
+<div id="page-settings" class="page">
+  <div class="section-head"><h2>ตั้งค่าระบบ</h2></div>
+
+  <div class="card">
+    <div class="card-title">🏫 ข้อมูลโรงเรียน</div>
+    <div class="form-group">
+      <label>ชื่อโรงเรียน</label>
+      <input type="text" id="school-name" placeholder="โรงเรียน..." onchange="saveSetting()">
+    </div>
+    <div class="form-group">
+      <label>ชื่ออาจารย์</label>
+      <input type="text" id="teacher-name" placeholder="อาจารย์..." onchange="saveSetting()">
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">🔗 Google Sheets (บันทึกข้อมูล)</div>
+    <div class="form-group">
+      <label>Google Apps Script URL</label>
+      <input type="text" id="sheet-url" placeholder="https://script.google.com/macros/s/.../exec" onchange="saveSetting()">
+    </div>
+    <div style="background:var(--blue-light);border-radius:var(--radius-sm);padding:12px;font-size:13px;color:var(--blue-dark);line-height:1.8">
+      <strong>วิธีตั้งค่า Google Sheets:</strong><br>
+      1. เปิด Google Sheets ใหม่<br>
+      2. ไปที่ Extensions → Apps Script<br>
+      3. วางโค้ด Apps Script ด้านล่าง แล้ว Deploy → Web App<br>
+      4. คัดลอก URL มาวางที่นี่
+    </div>
+    <hr class="divider">
+    <div class="form-group">
+      <label>Apps Script Code (คัดลอกไปวางใน Google Apps Script)</label>
+      <textarea id="apps-script-code" style="height:200px;font-family:monospace;font-size:12px" readonly></textarea>
+    </div>
+    <button class="btn btn-secondary btn-sm" onclick="copyScript()">📋 คัดลอก Script</button>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📱 QR Check-in</div>
+    <div style="font-size:14px;color:var(--text-muted);line-height:1.8">
+      เมื่อเปิด QR Code ในหน้าเช็คชื่อ นักเรียนสแกนแล้วจะเข้าหน้าเช็คอิน<br>
+      กดปุ่ม "ฉันมาแล้ว" เพื่อบันทึกการมาเรียน<br>
+      ระบบจะอัปเดตสถานะในตารางอัตโนมัติ
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title" style="color:var(--red-dark)">⚠️ ล้างข้อมูล</div>
+    <button class="btn btn-danger" onclick="clearAll()">ล้างข้อมูลทั้งหมด</button>
+  </div>
+</div>
+
+<!-- QR Modal -->
+<div class="modal-overlay" id="qr-modal">
+  <div class="modal">
+    <h2>📱 สแกนเพื่อเช็คอิน</h2>
+    <p id="qr-room-label">ห้อง: ...</p>
+    <div id="qr-container"></div>
+    <div style="font-size:13px;color:var(--text-muted);margin-bottom:1.5rem">
+      นักเรียนสแกน QR แล้วเลือกชื่อตัวเอง กด "ฉันมาแล้ว"
+    </div>
+    <button class="btn btn-secondary" onclick="closeQR()">ปิด</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// =========== DATA LAYER ===========
+let db = { rooms: {}, attendance: {}, settings: { school:'', teacher:'' } };
+
+function load() {
+  const saved = localStorage.getItem('attend_db');
+  if (saved) db = JSON.parse(saved);
+  applySettings();
+}
+function save() { localStorage.setItem('attend_db', JSON.stringify(db)); }
+function toast(msg, dur=2000) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), dur);
+}
+function todayKey() { return new Date().toISOString().slice(0,10); }
+function thaiDate() {
+  return new Date().toLocaleDateString('th-TH',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+}
+
+// =========== PAGES ===========
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  event.target.classList.add('active');
+  if(name==='check') { refreshRoomSelect('room-select'); refreshCheck(); }
+  if(name==='report') { refreshRoomSelect('report-room'); genReport(); }
+  if(name==='manage') renderRooms();
+  if(name==='settings') applySettings();
+}
+
+// =========== ROOMS ===========
+function addRoom() {
+  const name = document.getElementById('new-room-name').value.trim();
+  const grade = document.getElementById('new-room-grade').value.trim();
+  if(!name) return toast('กรุณาใส่ชื่อห้อง');
+  const id = 'r'+Date.now();
+  db.rooms[id] = { id, name, grade, students: [] };
+  save(); renderRooms(); refreshRoomSelect('room-select'); refreshRoomSelect('report-room');
+  document.getElementById('new-room-name').value='';
+  document.getElementById('new-room-grade').value='';
+  toast('เพิ่มห้อง '+name+' แล้ว');
+}
+function deleteRoom(id) {
+  if(!confirm('ลบห้องนี้?')) return;
+  delete db.rooms[id]; save(); renderRooms();
+  refreshRoomSelect('room-select'); refreshRoomSelect('report-room');
+  toast('ลบห้องแล้ว');
+}
+function renderRooms() {
+  const el = document.getElementById('rooms-list');
+  const rooms = Object.values(db.rooms);
+  if(!rooms.length) { el.innerHTML='<div class="empty">ยังไม่มีห้องเรียน เพิ่มห้องด้านบน</div>'; return; }
+  el.innerHTML = rooms.map(r => `
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <div>
+          <span class="room-tag">${r.grade||''}</span>
+          <strong style="margin-left:8px;font-size:16px">${r.name}</strong>
+          <span style="font-size:13px;color:var(--text-muted);margin-left:6px">${r.students.length} คน</span>
+        </div>
+        <button class="btn btn-danger btn-sm" onclick="deleteRoom('${r.id}')">ลบห้อง</button>
+      </div>
+      <div style="margin-bottom:10px;display:flex;gap:8px">
+        <input type="text" id="stu-name-${r.id}" placeholder="ชื่อ-นามสกุลนักเรียน" style="flex:1">
+        <button class="btn btn-primary btn-sm" onclick="addStudent('${r.id}')">+ เพิ่ม</button>
+      </div>
+      <div style="margin-bottom:8px;display:flex;gap:8px">
+        <textarea id="bulk-${r.id}" placeholder="เพิ่มหลายคนพร้อมกัน (บรรทัดละ 1 คน)&#10;เช่น&#10;สมชาย ใจดี&#10;สมหญิง รักเรียน" style="flex:1;height:80px;font-size:13px"></textarea>
+        <button class="btn btn-secondary btn-sm" onclick="bulkAdd('${r.id}')" style="align-self:flex-end">+ เพิ่มทีเดียว</button>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th style="width:36px">#</th><th>ชื่อ-นามสกุล</th><th style="width:60px">ลบ</th></tr></thead>
+          <tbody>${r.students.map((s,i)=>`
+            <tr>
+              <td style="color:var(--text-muted)">${i+1}</td>
+              <td>${s.name}</td>
+              <td><button class="btn btn-danger btn-icon btn-sm" onclick="deleteStudent('${r.id}','${s.id}')">✕</button></td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+        ${!r.students.length?'<div class="empty" style="padding:1rem">ยังไม่มีนักเรียน</div>':''}
+      </div>
+    </div>`).join('');
+}
+function addStudent(rid) {
+  const inp = document.getElementById('stu-name-'+rid);
+  const name = inp.value.trim();
+  if(!name) return toast('กรุณาใส่ชื่อ');
+  db.rooms[rid].students.push({ id:'s'+Date.now()+Math.random(), name });
+  save(); renderRooms(); inp.value=''; toast('เพิ่ม '+name+' แล้ว');
+}
+function bulkAdd(rid) {
+  const txt = document.getElementById('bulk-'+rid).value.trim();
+  if(!txt) return;
+  const names = txt.split('\n').map(s=>s.trim()).filter(Boolean);
+  names.forEach(name => db.rooms[rid].students.push({ id:'s'+Date.now()+Math.random()+name, name }));
+  save(); renderRooms(); toast('เพิ่ม '+names.length+' คนแล้ว');
+}
+function deleteStudent(rid, sid) {
+  db.rooms[rid].students = db.rooms[rid].students.filter(s=>s.id!==sid);
+  save(); renderRooms();
+}
+
+// =========== CHECK ===========
+let currentRoom = null;
+function refreshRoomSelect(selId) {
+  const sel = document.getElementById(selId);
+  const rooms = Object.values(db.rooms);
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">-- เลือกห้อง --</option>' +
+    rooms.map(r=>`<option value="${r.id}" ${r.id===cur?'selected':''}>${r.name} (${r.grade||''})</option>`).join('');
+}
+function loadRoom() {
+  const rid = document.getElementById('room-select').value;
+  currentRoom = rid ? db.rooms[rid] : null;
+  refreshCheck();
+}
+function refreshCheck() {
+  document.getElementById('today-label').textContent = thaiDate();
+  if(!currentRoom) {
+    document.getElementById('check-empty').style.display='block';
+    document.getElementById('check-content').style.display='none';
+    return;
+  }
+  document.getElementById('check-empty').style.display='none';
+  document.getElementById('check-content').style.display='block';
+  renderStudentTable();
+  updateStats();
+}
+function getAtt(rid, sid) {
+  const key = todayKey();
+  return (db.attendance[rid]?.[key]?.[sid]) || 'none';
+}
+function setAtt(rid, sid, status) {
+  const key = todayKey();
+  if(!db.attendance[rid]) db.attendance[rid]={};
+  if(!db.attendance[rid][key]) db.attendance[rid][key]={};
+  db.attendance[rid][key][sid] = status;
+  save(); updateStats();
+}
+function renderStudentTable() {
+  if(!currentRoom) return;
+  const tbody = document.getElementById('student-table');
+  tbody.innerHTML = currentRoom.students.map((s,i) => {
+    const att = getAtt(currentRoom.id, s.id);
+    return `<tr>
+      <td style="color:var(--text-muted)">${i+1}</td>
+      <td><strong>${s.name}</strong></td>
+      ${['present','late','absent','leave'].map(st=>`
+        <td style="text-align:center">
+          <button class="att-btn ${att===st?'sel-'+st:''}"
+            onclick="setAtt('${currentRoom.id}','${s.id}','${st}');renderStudentTable()">
+            ${st==='present'?'✅ มา':st==='late'?'⏰ สาย':st==='absent'?'❌ ขาด':'📝 ลา'}
+          </button>
+        </td>`).join('')}
+    </tr>`;
+  }).join('');
+}
+function updateStats() {
+  if(!currentRoom) return;
+  const key = todayKey();
+  const att = db.attendance[currentRoom.id]?.[key] || {};
+  let p=0,l=0,a=0,lv=0;
+  currentRoom.students.forEach(s=>{
+    const v=att[s.id]||'none';
+    if(v==='present')p++; else if(v==='late')l++;
+    else if(v==='absent')a++; else if(v==='leave')lv++;
+  });
+  document.getElementById('s-present').textContent=p;
+  document.getElementById('s-late').textContent=l;
+  document.getElementById('s-absent').textContent=a;
+  document.getElementById('s-leave').textContent=lv;
+  document.getElementById('s-total').textContent=currentRoom.students.length;
+}
+function markAll(status) {
+  if(!currentRoom) return;
+  currentRoom.students.forEach(s => setAtt(currentRoom.id, s.id, status));
+  renderStudentTable();
+  toast('บันทึกทั้งหมดเป็น "มา" แล้ว');
+}
+
+// =========== QR ===========
+let checkInterval = null;
+function openQR() {
+  if(!currentRoom) return toast('กรุณาเลือกห้องก่อน');
+  const modal = document.getElementById('qr-modal');
+  document.getElementById('qr-room-label').textContent = 'ห้อง: '+currentRoom.name+' | '+thaiDate();
+  document.getElementById('qr-container').innerHTML = '';
+  const base = window.location.href.replace('attendance-app.html','checkin.html');
+  const url = `${base}?rid=${currentRoom.id}&date=${todayKey()}&room=${encodeURIComponent(currentRoom.name)}`;
+  new QRCode(document.getElementById('qr-container'), {
+    text: url, width: 220, height: 220, colorDark:'#085041', colorLight:'#E1F5EE',
+    correctLevel: QRCode.CorrectLevel.M
+  });
+  modal.classList.add('open');
+  checkInterval = setInterval(() => {
+    load(); renderStudentTable(); updateStats();
+  }, 3000);
+}
+function closeQR() {
+  document.getElementById('qr-modal').classList.remove('open');
+  if(checkInterval) clearInterval(checkInterval);
+}
+
+// =========== REPORT ===========
+function genReport() {
+  const rid = document.getElementById('report-room').value;
+  const room = rid ? db.rooms[rid] : null;
+  const key = todayKey();
+  if(!room) { document.getElementById('report-text').textContent='เลือกห้องเพื่อสร้างรายงาน...'; return; }
+
+  const att = db.attendance[rid]?.[key] || {};
+  const absent=[], late=[], leave=[], present=[];
+  room.students.forEach(s=>{
+    const v=att[s.id]||'none';
+    if(v==='absent')absent.push(s.name);
+    else if(v==='late')late.push(s.name);
+    else if(v==='leave')leave.push(s.name);
+    else if(v==='present')present.push(s.name);
+  });
+
+  const school = db.settings.school || 'โรงเรียน';
+  const teacher = db.settings.teacher || 'ครู';
+  let txt = `📋 รายงานเช็คชื่อเข้าแถว\n`;
+  txt += `🏫 ${school}\n`;
+  txt += `📅 ${thaiDate()}\n`;
+  txt += `🚪 ห้อง ${room.name} ${room.grade?'('+room.grade+')':''}\n`;
+  txt += `👩‍🏫 ครูประจำชั้น: ${teacher}\n`;
+  txt += `━━━━━━━━━━━━━━━━\n`;
+  txt += `✅ มาเรียน: ${present.length} คน\n`;
+  txt += `⏰ มาสาย: ${late.length} คน\n`;
+  txt += `❌ ขาด: ${absent.length} คน\n`;
+  txt += `📝 ลา: ${leave.length} คน\n`;
+  txt += `👥 รวม: ${room.students.length} คน\n`;
+  if(absent.length) { txt += `━━━━━━━━━━━━━━━━\n❌ รายชื่อขาด:\n`; absent.forEach((n,i)=>txt+=`  ${i+1}. ${n}\n`); }
+  if(late.length) { txt += `⏰ รายชื่อมาสาย:\n`; late.forEach((n,i)=>txt+=`  ${i+1}. ${n}\n`); }
+  if(leave.length) { txt += `📝 รายชื่อลา:\n`; leave.forEach((n,i)=>txt+=`  ${i+1}. ${n}\n`); }
+  txt += `━━━━━━━━━━━━━━━━\nส่งโดยระบบเช็คชื่ออัตโนมัติ`;
+
+  document.getElementById('report-text').textContent = txt;
+
+  // stats
+  const allDays = Object.keys(db.attendance[rid]||{}).sort().reverse().slice(0,30);
+  let statsHtml = `<div class="stats-grid">
+    <div class="stat green"><div class="stat-n">${present.length}</div><div class="stat-label">มาวันนี้</div></div>
+    <div class="stat red"><div class="stat-n">${absent.length}</div><div class="stat-label">ขาดวันนี้</div></div>
+    <div class="stat amber"><div class="stat-n">${late.length}</div><div class="stat-label">สายวันนี้</div></div>
+    <div class="stat blue"><div class="stat-n">${leave.length}</div><div class="stat-label">ลาวันนี้</div></div>
+  </div>`;
+  document.getElementById('report-stats').innerHTML = statsHtml;
+
+  // history
+  if(allDays.length) {
+    let hHtml = `<div class="table-wrap"><table>
+      <thead><tr><th>วันที่</th><th>มา</th><th>สาย</th><th>ขาด</th><th>ลา</th></tr></thead><tbody>`;
+    allDays.forEach(d => {
+      const a = db.attendance[rid][d]||{};
+      let p2=0,l2=0,ab=0,lv2=0;
+      room.students.forEach(s=>{
+        const v=a[s.id]||'none';
+        if(v==='present')p2++; else if(v==='late')l2++;
+        else if(v==='absent')ab++; else if(v==='leave')lv2++;
+      });
+      hHtml+=`<tr><td>${d}</td>
+        <td><span class="pill pill-present">${p2}</span></td>
+        <td><span class="pill pill-late">${l2}</span></td>
+        <td><span class="pill pill-absent">${ab}</span></td>
+        <td><span class="pill pill-leave">${lv2}</span></td></tr>`;
+    });
+    hHtml+='</tbody></table></div>';
+    document.getElementById('history-table').innerHTML = hHtml;
+  } else {
+    document.getElementById('history-table').innerHTML='<div class="empty">ยังไม่มีประวัติ</div>';
+  }
+}
+function copyReport() {
+  const txt = document.getElementById('report-text').textContent;
+  if(navigator.clipboard) {
+    navigator.clipboard.writeText(txt).then(()=>toast('คัดลอกแล้ว! วางใน LINE ได้เลย 📱'));
+  } else {
+    const ta = document.createElement('textarea');
+    ta.value=txt; document.body.appendChild(ta); ta.select();
+    document.execCommand('copy'); document.body.removeChild(ta);
+    toast('คัดลอกแล้ว! วางใน LINE ได้เลย 📱');
+  }
+}
+
+// =========== SETTINGS ===========
+function applySettings() {
+  document.getElementById('school-name').value = db.settings.school||'';
+  document.getElementById('teacher-name').value = db.settings.teacher||'';
+  document.getElementById('sheet-url').value = db.settings.sheetUrl||'';
+  document.getElementById('apps-script-code').value = getAppsScript();
+}
+function saveSetting() {
+  db.settings.school = document.getElementById('school-name').value;
+  db.settings.teacher = document.getElementById('teacher-name').value;
+  db.settings.sheetUrl = document.getElementById('sheet-url').value;
+  save(); toast('บันทึกการตั้งค่าแล้ว');
+}
+function copyScript() {
+  navigator.clipboard.writeText(getAppsScript()).then(()=>toast('คัดลอก Script แล้ว'));
+}
+function clearAll() {
+  if(confirm('ล้างข้อมูลทั้งหมด? (ไม่สามารถกู้คืนได้)')) {
+    db={rooms:{},attendance:{},settings:{school:'',teacher:''}};
+    save(); load(); toast('ล้างข้อมูลแล้ว');
+    renderRooms(); refreshRoomSelect('room-select'); refreshRoomSelect('report-room');
+  }
+}
+
+// =========== GOOGLE SHEETS ===========
+async function saveToSheets() {
+  const url = db.settings.sheetUrl;
+  if(!url) return toast('กรุณาตั้งค่า Google Sheets URL ก่อน (เมนูตั้งค่า)');
+  if(!currentRoom) return toast('กรุณาเลือกห้องก่อน');
+  const key = todayKey();
+  const att = db.attendance[currentRoom.id]?.[key]||{};
+  const rows = currentRoom.students.map(s=>({
+    date: key, room: currentRoom.name, grade: currentRoom.grade,
+    name: s.name, status: att[s.id]||'none',
+    school: db.settings.school, teacher: db.settings.teacher
+  }));
+  try {
+    toast('กำลังบันทึก...');
+    await fetch(url, {method:'POST',body:JSON.stringify({action:'save',rows}),headers:{'Content-Type':'text/plain'}});
+    toast('บันทึกลง Google Sheets แล้ว ✅');
+  } catch(e) { toast('เกิดข้อผิดพลาด: '+e.message); }
+}
+
+function getAppsScript() {
+return `// Google Apps Script - วางในไฟล์ Code.gs
+// Deploy → New deployment → Web app → Anyone
+
+function doPost(e) {
+  const data = JSON.parse(e.postData.contents);
+  if (data.action === 'save') {
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    let sheet = ss.getSheetByName('Attendance');
+    if (!sheet) {
+      sheet = ss.insertSheet('Attendance');
+      sheet.appendRow(['วันที่','โรงเรียน','ห้อง','ระดับชั้น','ชื่อนักเรียน','สถานะ','ครู']);
+    }
+    data.rows.forEach(r => {
+      sheet.appendRow([r.date, r.school, r.room, r.grade, r.name, r.status, r.teacher]);
+    });
+  }
+  return ContentService.createTextOutput(JSON.stringify({ok:true}))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function doGet(e) {
+  return ContentService.createTextOutput('Attendance API ready');
+}`;
+}
+
+// =========== INIT ===========
+load();
+refreshRoomSelect('room-select');
+refreshRoomSelect('report-room');
+refreshCheck();
+renderRooms();
+document.getElementById('today-label').textContent = thaiDate();
+</script>
+</body>
+</html>

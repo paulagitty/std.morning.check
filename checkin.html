@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>เช็คอินเข้าแถว</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --green: #1D9E75; --green-light: #E1F5EE; --green-dark: #085041;
+    --red: #E24B4A; --red-light: #FCEBEB;
+    --amber: #BA7517; --amber-light: #FAEEDA;
+    --blue: #378ADD; --blue-light: #E6F1FB;
+    --bg: #f0faf5; --text: #1a1a18; --muted: #6b6b67;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Sarabun', sans-serif; background: var(--bg); min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding: 1rem; }
+
+  .header { text-align: center; padding: 2rem 1rem 1.5rem; width: 100%; max-width: 420px; }
+  .header .icon { font-size: 48px; margin-bottom: 8px; }
+  .header h1 { font-size: 24px; font-weight: 700; color: var(--green-dark); }
+  .header p { color: var(--muted); font-size: 14px; margin-top: 4px; }
+
+  .card { background: #fff; border-radius: 16px; padding: 1.5rem; width: 100%; max-width: 420px; box-shadow: 0 4px 24px rgba(0,0,0,0.08); margin-bottom: 1rem; }
+  .card h2 { font-size: 16px; font-weight: 600; margin-bottom: 1rem; color: var(--text); }
+
+  .search-box { width: 100%; padding: 12px 16px; border: 2px solid #e5e5e0; border-radius: 12px; font-family: 'Sarabun', sans-serif; font-size: 16px; margin-bottom: 12px; transition: border-color 0.15s; }
+  .search-box:focus { outline: none; border-color: var(--green); }
+
+  .student-list { max-height: 320px; overflow-y: auto; }
+  .student-item { display: flex; align-items: center; padding: 12px 14px; border-radius: 10px; cursor: pointer; transition: all 0.12s; border: 2px solid transparent; margin-bottom: 6px; background: #fafaf8; }
+  .student-item:hover { background: var(--green-light); border-color: var(--green); }
+  .student-item.selected { background: var(--green-light); border-color: var(--green); }
+  .student-num { width: 28px; height: 28px; border-radius: 50%; background: var(--green-light); color: var(--green-dark); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; margin-right: 12px; flex-shrink: 0; }
+  .student-item.selected .student-num { background: var(--green); color: #fff; }
+  .student-name { font-size: 16px; font-weight: 500; }
+  .student-item .check-icon { margin-left: auto; font-size: 20px; opacity: 0; }
+  .student-item.selected .check-icon { opacity: 1; }
+
+  .btn-checkin { width: 100%; padding: 16px; background: var(--green); color: #fff; border: none; border-radius: 14px; font-family: 'Sarabun', sans-serif; font-size: 18px; font-weight: 700; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+  .btn-checkin:hover { background: var(--green-dark); transform: translateY(-1px); }
+  .btn-checkin:disabled { background: #c5c5c0; cursor: not-allowed; transform: none; }
+
+  /* SUCCESS */
+  .success-screen { display: none; flex-direction: column; align-items: center; text-align: center; padding: 3rem 1rem; width: 100%; max-width: 420px; }
+  .success-icon { font-size: 80px; margin-bottom: 16px; animation: pop 0.4s ease; }
+  @keyframes pop { 0%{transform:scale(0)} 80%{transform:scale(1.15)} 100%{transform:scale(1)} }
+  .success-name { font-size: 26px; font-weight: 700; color: var(--green-dark); margin-bottom: 8px; }
+  .success-sub { font-size: 15px; color: var(--muted); margin-bottom: 24px; }
+  .success-card { background: var(--green-light); border-radius: 14px; padding: 1.25rem; width: 100%; max-width: 320px; margin-bottom: 1.5rem; }
+  .btn-back { padding: 12px 28px; border: 2px solid var(--green); border-radius: 12px; background: #fff; color: var(--green-dark); font-family: 'Sarabun', sans-serif; font-size: 16px; font-weight: 600; cursor: pointer; }
+
+  .error-box { background: var(--red-light); border-radius: 12px; padding: 16px; text-align: center; color: var(--red); font-size: 15px; width: 100%; max-width: 420px; }
+  .info-bar { background: var(--green-dark); color: #fff; border-radius: 12px; padding: 12px 16px; width: 100%; max-width: 420px; font-size: 14px; text-align: center; margin-bottom: 1rem; }
+
+  .already-badge { display: inline-block; background: var(--amber-light); color: var(--amber); padding: 3px 10px; border-radius: 6px; font-size: 13px; font-weight: 500; margin-left: 8px; }
+  .empty { text-align: center; color: var(--muted); padding: 2rem; font-size: 14px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="icon">📋</div>
+  <h1>เช็คอินเข้าแถว</h1>
+  <p id="date-label"></p>
+</div>
+
+<div id="info-bar" class="info-bar" style="display:none"></div>
+<div id="error-box" class="error-box" style="display:none">ลิงก์ไม่ถูกต้อง กรุณาสแกน QR ใหม่อีกครั้ง</div>
+
+<div id="main-section">
+  <div class="card">
+    <h2>เลือกชื่อของคุณ</h2>
+    <input type="text" class="search-box" id="search" placeholder="🔍 ค้นหาชื่อ..." oninput="filterStudents()">
+    <div class="student-list" id="student-list"></div>
+  </div>
+
+  <div class="card" style="padding:0;overflow:hidden;border:none;background:none;box-shadow:none">
+    <button class="btn-checkin" id="checkin-btn" disabled onclick="doCheckin()">
+      <span>✅</span> ฉันมาแล้ว!
+    </button>
+  </div>
+</div>
+
+<div class="success-screen" id="success-screen">
+  <div class="success-icon">✅</div>
+  <div class="success-name" id="suc-name"></div>
+  <div class="success-sub" id="suc-room"></div>
+  <div class="success-card">
+    <div style="font-size:15px;color:var(--green-dark);font-weight:600">บันทึกการมาเรียนแล้ว</div>
+    <div style="font-size:14px;color:var(--green);margin-top:6px" id="suc-time"></div>
+  </div>
+  <button class="btn-back" onclick="resetForm()">← เช็คอินคนอื่น</button>
+</div>
+
+<script>
+let params={}, students=[], selected=null, db={};
+
+function getParams() {
+  const q = new URLSearchParams(window.location.search);
+  return { rid: q.get('rid'), date: q.get('date'), room: q.get('room') };
+}
+function loadDB() {
+  const saved = localStorage.getItem('attend_db');
+  return saved ? JSON.parse(saved) : null;
+}
+function saveDB(d) { localStorage.setItem('attend_db', JSON.stringify(d)); }
+
+function init() {
+  params = getParams();
+  const now = new Date();
+  document.getElementById('date-label').textContent = now.toLocaleDateString('th-TH',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+
+  if(!params.rid) { document.getElementById('error-box').style.display='block'; document.getElementById('main-section').style.display='none'; return; }
+  db = loadDB();
+  if(!db || !db.rooms || !db.rooms[params.rid]) {
+    document.getElementById('error-box').textContent = 'ไม่พบข้อมูลห้องเรียน กรุณาสแกน QR ใหม่';
+    document.getElementById('error-box').style.display='block';
+    document.getElementById('main-section').style.display='none'; return;
+  }
+  const room = db.rooms[params.rid];
+  students = room.students;
+
+  const bar = document.getElementById('info-bar');
+  bar.textContent = '🏫 ห้อง ' + (params.room||room.name) + ' | ' + room.grade;
+  bar.style.display = 'block';
+
+  renderList(students);
+}
+
+function renderList(list) {
+  const el = document.getElementById('student-list');
+  if(!list.length) { el.innerHTML='<div class="empty">ไม่พบชื่อ</div>'; return; }
+  const att = db.attendance?.[params.rid]?.[params.date]||{};
+  el.innerHTML = list.map((s,i) => {
+    const already = att[s.id] && att[s.id]!=='none';
+    return `<div class="student-item ${s.id===selected?'selected':''}" onclick="selectStudent('${s.id}')">
+      <div class="student-num">${(students.indexOf(s)+1)}</div>
+      <span class="student-name">${s.name}${already?'<span class="already-badge">เช็คแล้ว</span>':''}</span>
+      <span class="check-icon">✓</span>
+    </div>`;
+  }).join('');
+}
+
+function filterStudents() {
+  const q = document.getElementById('search').value.toLowerCase();
+  const filtered = q ? students.filter(s=>s.name.toLowerCase().includes(q)) : students;
+  renderList(filtered);
+}
+
+function selectStudent(sid) {
+  selected = sid;
+  document.getElementById('checkin-btn').disabled = false;
+  filterStudents();
+}
+
+function doCheckin() {
+  if(!selected) return;
+  const student = students.find(s=>s.id===selected);
+  if(!student) return;
+
+  if(!db.attendance) db.attendance={};
+  if(!db.attendance[params.rid]) db.attendance[params.rid]={};
+  if(!db.attendance[params.rid][params.date]) db.attendance[params.rid][params.date]={};
+  db.attendance[params.rid][params.date][selected] = 'present';
+  saveDB(db);
+
+  const now = new Date();
+  document.getElementById('suc-name').textContent = student.name;
+  document.getElementById('suc-room').textContent = 'ห้อง ' + (params.room||'') + ' | ' + now.toLocaleTimeString('th-TH');
+  document.getElementById('suc-time').textContent = 'เวลา ' + now.toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'}) + ' น.';
+  document.getElementById('main-section').style.display='none';
+  document.getElementById('success-screen').style.display='flex';
+}
+
+function resetForm() {
+  selected = null;
+  db = loadDB();
+  document.getElementById('checkin-btn').disabled = true;
+  document.getElementById('main-section').style.display='block';
+  document.getElementById('success-screen').style.display='none';
+  document.getElementById('search').value='';
+  filterStudents();
+}
+
+init();
+</script>
+</body>
+</html>
