@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ระบบเช็คชื่อเข้าแถว</title>
+<title>ระบบเช็คชื่อเข้าแถว (สำหรับอาจารย์)</title>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
@@ -16,27 +16,44 @@
     --bg: #f8f7f4; --card: #ffffff; --border: rgba(0,0,0,0.1);
     --text: #1a1a18; --text-muted: #6b6b67;
     --radius: 12px; --radius-sm: 8px;
-    --shadow: 0 2px 12px rgba(0,0,0,0.08);
+    --shadow: 0 4px 20px rgba(0,0,0,0.05);
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: 'Sarabun', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
 
-  /* NAV */
-  .nav { background: var(--green-dark); color: #fff; padding: 0 1.5rem; display: flex; align-items: center; justify-content: space-between; height: 56px; position: sticky; top: 0; z-index: 100; }
-  .nav-brand { font-size: 18px; font-weight: 600; letter-spacing: -0.3px; }
-  .nav-tabs { display: flex; gap: 4px; }
-  .nav-tab { background: none; border: none; color: rgba(255,255,255,0.65); padding: 6px 14px; border-radius: 20px; cursor: pointer; font-family: 'Sarabun',sans-serif; font-size: 14px; transition: all 0.15s; white-space: nowrap; }
+  /* NAV (ซ่อนไว้ก่อน Login) */
+  .nav { background: var(--green-dark); color: #fff; padding: 0 1.5rem; display: none; align-items: center; justify-content: space-between; height: 56px; position: sticky; top: 0; z-index: 100; }
+  .nav-brand { font-size: 18px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+  .nav-tabs { display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; }
+  .nav-tabs::-webkit-scrollbar { display: none; }
+  .nav-tab { background: none; border: none; color: rgba(255,255,255,0.65); padding: 6px 14px; border-radius: 20px; cursor: pointer; font-family: inherit; font-size: 14px; transition: 0.15s; white-space: nowrap; }
   .nav-tab.active, .nav-tab:hover { background: rgba(255,255,255,0.15); color: #fff; }
+  .logout-btn { background: var(--red); color: white; border: none; padding: 4px 12px; border-radius: 12px; font-size: 12px; cursor: pointer; font-family: inherit; margin-left: 8px; font-weight: 600; }
 
   /* LAYOUT */
   .page { display: none; padding: 1.5rem; max-width: 900px; margin: 0 auto; }
   .page.active { display: block; }
-
-  /* CARDS */
-  .card { background: var(--card); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 1.25rem; margin-bottom: 1rem; }
-  .card-title { font-size: 16px; font-weight: 600; margin-bottom: 1rem; color: var(--text); display: flex; align-items: center; gap: 8px; }
-
-  /* STATS */
+  
+  /* LOGIN PORTAL (หน้าบ้าน) */
+  #page-login { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 1rem; background: var(--green-dark); }
+  .portal-header { text-align: center; color: white; margin-bottom: 2rem; }
+  .portal-header h1 { font-size: 28px; margin-bottom: 8px; }
+  .portal-header p { opacity: 0.8; font-size: 15px; }
+  
+  .login-box { background: #fff; padding: 2rem; border-radius: 20px; width: 100%; max-width: 400px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); text-align: center; }
+  .login-box h2 { color: var(--text); margin-bottom: 1.5rem; font-size: 20px; }
+  
+  .pin-dots { display: flex; justify-content: center; gap: 12px; margin: 1.5rem 0; }
+  .pin-dot { width: 16px; height: 16px; border-radius: 50%; background: var(--gray-light); border: 2px solid var(--border); transition: 0.2s; }
+  .pin-dot.filled { background: var(--green); border-color: var(--green); }
+  .numpad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 1rem; }
+  .num-btn { background: var(--gray-light); border: none; border-radius: 12px; padding: 16px; font-size: 20px; font-weight: 600; cursor: pointer; transition: 0.1s; }
+  .num-btn:active { background: var(--border); transform: scale(0.95); }
+  
+  /* CARDS & COMPONENTS */
+  .card { background: var(--card); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 1.25rem; margin-bottom: 1rem; box-shadow: var(--shadow); }
+  .card-title { font-size: 16px; font-weight: 600; margin-bottom: 1rem; color: var(--text); }
+  
   .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px,1fr)); gap: 10px; margin-bottom: 1.25rem; }
   .stat { background: var(--gray-light); border-radius: var(--radius-sm); padding: 14px; text-align: center; }
   .stat-n { font-size: 28px; font-weight: 700; line-height: 1; }
@@ -46,108 +63,134 @@
   .stat.red .stat-n { color: var(--red); }
   .stat.blue .stat-n { color: var(--blue); }
 
-  /* BUTTONS */
-  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 9px 18px; border-radius: 8px; border: none; cursor: pointer; font-family: 'Sarabun',sans-serif; font-size: 14px; font-weight: 500; transition: all 0.15s; }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 9px 18px; border-radius: 8px; border: none; cursor: pointer; font-family: inherit; font-size: 14px; font-weight: 500; transition: 0.15s; }
   .btn-primary { background: var(--green); color: #fff; }
   .btn-primary:hover { background: var(--green-dark); }
+  .btn-primary:disabled { background: var(--gray); cursor: not-allowed; }
   .btn-secondary { background: var(--gray-light); color: var(--text); border: 0.5px solid var(--border); }
-  .btn-secondary:hover { background: #e5e4de; }
   .btn-danger { background: var(--red-light); color: var(--red-dark); }
-  .btn-danger:hover { background: #f7c1c1; }
-  .btn-blue { background: var(--blue); color: #fff; }
-  .btn-blue:hover { background: var(--blue-dark); }
   .btn-sm { padding: 5px 12px; font-size: 13px; }
-  .btn-icon { width: 34px; height: 34px; padding: 0; justify-content: center; border-radius: var(--radius-sm); }
+  .btn-block { width: 100%; padding: 12px; }
 
-  /* FORMS */
-  input, select, textarea { width: 100%; padding: 9px 12px; border: 0.5px solid var(--border); border-radius: var(--radius-sm); font-family: 'Sarabun',sans-serif; font-size: 14px; background: #fff; color: var(--text); }
-  input:focus, select:focus { outline: none; border-color: var(--green); box-shadow: 0 0 0 3px rgba(29,158,117,0.15); }
-  label { font-size: 13px; color: var(--text-muted); margin-bottom: 4px; display: block; }
-  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
-  .form-group { margin-bottom: 12px; }
+  input, select, textarea { width: 100%; padding: 12px 14px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-family: inherit; font-size: 15px; background: #fff; color: var(--text); transition: 0.2s; }
+  input:focus, select:focus { outline: none; border-color: var(--green); }
+  label { font-size: 13px; color: var(--text-muted); margin-bottom: 6px; display: block; font-weight: 500; }
+  .form-group { margin-bottom: 1rem; text-align: left; }
+  .form-row { display: grid; grid-template-columns: 1fr; gap: 12px; margin-bottom: 12px; }
 
-  /* TABLE */
   .table-wrap { overflow-x: auto; }
   table { width: 100%; border-collapse: collapse; font-size: 14px; }
-  th { text-align: left; padding: 10px 12px; background: var(--gray-light); font-weight: 600; font-size: 13px; color: var(--text-muted); border-bottom: 1px solid var(--border); }
-  td { padding: 10px 12px; border-bottom: 0.5px solid var(--border); }
-  tr:last-child td { border-bottom: none; }
+  th { text-align: left; padding: 12px; background: var(--gray-light); font-weight: 600; color: var(--text-muted); border-bottom: 1px solid var(--border); }
+  td { padding: 12px; border-bottom: 0.5px solid var(--border); }
   tr:hover td { background: #fafaf8; }
 
-  /* STATUS PILLS */
-  .pill { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 500; }
-  .pill-present { background: var(--green-light); color: var(--green-dark); }
-  .pill-absent { background: var(--red-light); color: var(--red-dark); }
-  .pill-late { background: var(--amber-light); color: var(--amber-dark); }
-  .pill-leave { background: var(--blue-light); color: var(--blue-dark); }
-  .pill-none { background: var(--gray-light); color: var(--gray); }
-
-  /* ATTENDANCE BUTTONS */
-  .att-btn { width: 100%; padding: 8px 6px; border-radius: 6px; border: 1px solid var(--border); cursor: pointer; font-family: 'Sarabun',sans-serif; font-size: 13px; font-weight: 500; transition: all 0.12s; background: #fff; color: var(--text-muted); }
-  .att-btn:hover { border-color: var(--green); }
+  .att-btn { width: 100%; padding: 8px 4px; border-radius: 6px; border: 1px solid var(--border); cursor: pointer; font-family: inherit; font-size: 13px; font-weight: 500; transition: 0.12s; background: #fff; color: var(--text-muted); }
   .att-btn.sel-present { background: var(--green-light); border-color: var(--green); color: var(--green-dark); }
   .att-btn.sel-absent { background: var(--red-light); border-color: var(--red); color: var(--red-dark); }
   .att-btn.sel-late { background: var(--amber-light); border-color: var(--amber); color: var(--amber-dark); }
   .att-btn.sel-leave { background: var(--blue-light); border-color: var(--blue); color: var(--blue-dark); }
 
-  /* QR MODAL */
-  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 200; align-items: center; justify-content: center; }
+  /* MODALS & TOASTS */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 200; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
   .modal-overlay.open { display: flex; }
-  .modal { background: #fff; border-radius: 16px; padding: 2rem; max-width: 400px; width: 90%; text-align: center; }
-  .modal h2 { font-size: 18px; margin-bottom: 6px; }
-  .modal p { color: var(--text-muted); font-size: 13px; margin-bottom: 1.5rem; }
-  #qr-container { display: flex; justify-content: center; margin-bottom: 1.5rem; }
-  #qr-container img, #qr-container canvas { border-radius: 8px; border: 4px solid var(--green-light); }
+  .modal { background: #fff; border-radius: 16px; padding: 2rem; max-width: 400px; width: 90%; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.2); }
+  #qr-container { display: flex; justify-content: center; margin: 1.5rem 0; padding: 1rem; background: var(--green-light); border-radius: 12px; }
+  
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--gray-dark); color: #fff; padding: 12px 24px; border-radius: 30px; font-size: 14px; z-index: 999; opacity: 0; transition: 0.3s; pointer-events: none; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-  /* REPORT BOX */
-  .report-box { background: var(--gray-light); border: 0.5px solid var(--border); border-radius: var(--radius-sm); padding: 1rem; font-size: 14px; line-height: 1.9; white-space: pre-wrap; font-family: 'Sarabun', sans-serif; min-height: 80px; }
-
-  /* TOAST */
-  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--gray-dark); color: #fff; padding: 10px 20px; border-radius: 8px; font-size: 14px; z-index: 999; opacity: 0; transition: opacity 0.2s; pointer-events: none; }
-  .toast.show { opacity: 1; }
-
-  /* MISC */
-  .section-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; flex-wrap: wrap; gap: 8px; }
-  .section-head h2 { font-size: 20px; font-weight: 700; }
-  .chip { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 20px; font-size: 12px; background: var(--green-light); color: var(--green-dark); font-weight: 500; }
-  .empty { text-align: center; color: var(--text-muted); padding: 2.5rem 1rem; font-size: 14px; }
-  .flex-gap { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
-  .divider { border: none; border-top: 0.5px solid var(--border); margin: 1rem 0; }
-  .room-tag { display: inline-block; background: var(--blue-light); color: var(--blue-dark); padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 500; }
-
-  @media (max-width: 600px) {
-    .nav-brand { font-size: 15px; }
-    .nav-tab { padding: 5px 10px; font-size: 13px; }
-    .form-row { grid-template-columns: 1fr; }
-    .page { padding: 1rem; }
-  }
+  .section-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; flex-wrap: wrap; gap: 12px; }
+  .empty { text-align: center; color: var(--text-muted); padding: 3rem 1rem; font-size: 15px; background: var(--gray-light); border-radius: var(--radius); }
 </style>
 </head>
 <body>
 
-<nav class="nav">
-  <div class="nav-brand">📋 เช็คชื่อเข้าแถว</div>
+<!-- ======== PAGE: LOGIN (หน้าบ้าน) ======== -->
+<div id="page-login" class="page active">
+  <div class="portal-header">
+    <h1>🏫 ระบบลงเวลาเข้าแถว</h1>
+    <p>ส่วนสำหรับบุคลากรครูและอาจารย์</p>
+  </div>
+
+  <!-- กล่อง Login -->
+  <div class="login-box" id="box-login">
+    <h2>เข้าสู่ระบบอาจารย์</h2>
+    <div class="form-group">
+      <label>เลือกชื่ออาจารย์</label>
+      <select id="login-teacher-select">
+        <option value="">-- กรุณาเลือกชื่อของคุณ --</option>
+      </select>
+    </div>
+    
+    <div id="pin-section" style="display:none;">
+      <p style="color:var(--text-muted); font-size:14px; margin-bottom:8px;">กรุณาใส่รหัส PIN 4 หลัก</p>
+      <div class="pin-dots" id="pin-dots">
+        <div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div>
+      </div>
+      <div class="numpad">
+        <button class="num-btn" onclick="addPin(1)">1</button>
+        <button class="num-btn" onclick="addPin(2)">2</button>
+        <button class="num-btn" onclick="addPin(3)">3</button>
+        <button class="num-btn" onclick="addPin(4)">4</button>
+        <button class="num-btn" onclick="addPin(5)">5</button>
+        <button class="num-btn" onclick="addPin(6)">6</button>
+        <button class="num-btn" onclick="addPin(7)">7</button>
+        <button class="num-btn" onclick="addPin(8)">8</button>
+        <button class="num-btn" onclick="addPin(9)">9</button>
+        <button class="num-btn" style="background:transparent;color:var(--red)" onclick="clearPin()">ลบ</button>
+        <button class="num-btn" onclick="addPin(0)">0</button>
+        <button class="num-btn" style="background:transparent"></button>
+      </div>
+    </div>
+    
+    <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border);">
+      <button class="btn btn-secondary btn-block" onclick="toggleRegister()">+ เพิ่มรายชื่ออาจารย์ใหม่</button>
+    </div>
+  </div>
+
+  <!-- กล่อง Register (ซ่อนไว้) -->
+  <div class="login-box" id="box-register" style="display:none;">
+    <h2>📝 ลงทะเบียนอาจารย์ใหม่</h2>
+    <div class="form-group">
+      <label>ชื่อ-นามสกุล อาจารย์</label>
+      <input type="text" id="reg-name" placeholder="เช่น อ.สมชาย ใจดี">
+    </div>
+    <div class="form-group">
+      <label>ตั้งรหัส PIN 4 หลัก (สำหรับเข้าสู่ระบบ)</label>
+      <input type="password" id="reg-pin" placeholder="ตัวเลข 4 หลัก" maxlength="4" pattern="\d*">
+    </div>
+    <button class="btn btn-primary btn-block" onclick="registerTeacher()" style="margin-bottom:12px;">บันทึกข้อมูล</button>
+    <button class="btn btn-secondary btn-block" onclick="toggleRegister()">กลับไปหน้าเข้าสู่ระบบ</button>
+  </div>
+</div>
+
+<!-- NAV BAR (ซ่อนจนกว่าจะ Login สำเร็จ) -->
+<nav class="nav" id="main-nav">
+  <div class="nav-brand">
+    <span id="nav-teacher-name">เช็คชื่อ</span>
+    <button class="logout-btn" onclick="logout()">ออกระบบ</button>
+  </div>
   <div class="nav-tabs">
     <button class="nav-tab active" onclick="showPage('check')">เช็คชื่อ</button>
     <button class="nav-tab" onclick="showPage('report')">รายงาน</button>
-    <button class="nav-tab" onclick="showPage('manage')">จัดการ</button>
-    <button class="nav-tab" onclick="showPage('settings')">ตั้งค่า</button>
+    <button class="nav-tab" onclick="showPage('manage')">จัดการห้อง</button>
+    <button class="nav-tab" onclick="showPage('settings')">ตั้งค่าระบบ</button>
   </div>
 </nav>
 
 <!-- ======== PAGE: เช็คชื่อ ======== -->
-<div id="page-check" class="page active">
+<div id="page-check" class="page">
   <div class="section-head">
     <h2>เช็คชื่อประจำวัน</h2>
-    <div class="flex-gap">
-      <span id="today-label" style="font-size:14px;color:var(--text-muted)"></span>
-      <select id="room-select" style="width:auto;font-size:14px" onchange="loadRoom()">
-        <option value="">-- เลือกห้อง --</option>
+    <div style="display:flex; gap:8px; flex-wrap:wrap;">
+      <input type="date" id="check-date" style="width:auto;" onchange="refreshCheck()">
+      <select id="room-select" style="width:auto;" onchange="loadRoom()">
+        <option value="">-- เลือกห้องในความดูแล --</option>
       </select>
     </div>
   </div>
 
-  <div id="check-empty" class="empty">กรุณาเลือกห้องเรียน หรือเพิ่มห้องในเมนู "จัดการ"</div>
+  <div id="check-empty" class="empty">กรุณาเลือกห้องเรียน (หากยังไม่มี ให้ไปที่เมนู "จัดการห้อง" เพื่อเพิ่มห้อง)</div>
 
   <div id="check-content" style="display:none">
     <div class="stats-grid">
@@ -158,10 +201,12 @@
       <div class="stat"><div class="stat-n" id="s-total">0</div><div class="stat-label">ทั้งหมด</div></div>
     </div>
 
-    <div class="flex-gap" style="margin-bottom:1rem">
-      <button class="btn btn-primary" onclick="openQR()">📱 QR สแกนเช็คชื่อ</button>
-      <button class="btn btn-secondary" onclick="markAll('present')">✅ มาทั้งหมด</button>
-      <button class="btn btn-secondary btn-sm" onclick="saveToSheets()">💾 บันทึก Sheets</button>
+    <!-- ปุ่ม Action -->
+    <div style="display:flex; gap:8px; margin-bottom:1rem; flex-wrap:wrap;">
+      <button class="btn btn-primary" id="btn-create-qr" onclick="openQR()">📱 1. สร้าง QR ให้นักเรียนสแกน</button>
+      <button class="btn btn-secondary" onclick="pullDataFromSheets()">🔄 2. ดึงข้อมูลที่นักเรียนสแกน</button>
+      <button class="btn btn-secondary" style="margin-left:auto" onclick="markAll('present')">✅ เช็คมาทั้งหมด</button>
+      <button class="btn btn-secondary" onclick="saveToSheets()">💾 บันทึกที่ครูเช็คขึ้น Sheets</button>
     </div>
 
     <div class="card" style="padding:0;overflow:hidden">
@@ -171,10 +216,10 @@
             <tr>
               <th style="width:36px">#</th>
               <th>ชื่อ-นามสกุล</th>
-              <th style="width:80px;text-align:center">มา</th>
-              <th style="width:80px;text-align:center">สาย</th>
-              <th style="width:80px;text-align:center">ขาด</th>
-              <th style="width:80px;text-align:center">ลา</th>
+              <th style="width:70px;text-align:center">มา</th>
+              <th style="width:70px;text-align:center">สาย</th>
+              <th style="width:70px;text-align:center">ขาด</th>
+              <th style="width:70px;text-align:center">ลา</th>
             </tr>
           </thead>
           <tbody id="student-table"></tbody>
@@ -187,48 +232,40 @@
 <!-- ======== PAGE: รายงาน ======== -->
 <div id="page-report" class="page">
   <div class="section-head">
-    <h2>รายงานสรุป</h2>
-    <select id="report-room" style="width:auto;font-size:14px" onchange="genReport()">
-      <option value="">-- เลือกห้อง --</option>
-    </select>
-  </div>
-
-  <div class="card">
-    <div class="card-title">📊 สถิติรายเดือน</div>
-    <div id="report-stats" class="empty">เลือกห้องเพื่อดูรายงาน</div>
-  </div>
-
-  <div class="card" id="daily-report-card">
-    <div class="flex-gap" style="justify-content:space-between;margin-bottom:12px">
-      <div class="card-title" style="margin:0">📋 สรุปวันนี้ (คัดลอกส่ง LINE)</div>
-      <button class="btn btn-primary btn-sm" onclick="copyReport()">📋 คัดลอก</button>
+    <h2>รายงานสรุปของฉัน</h2>
+    <div style="display:flex; gap:8px;">
+      <input type="date" id="report-date" style="width:auto;" onchange="genReport()">
+      <select id="report-room" style="width:auto;" onchange="genReport()">
+        <option value="">-- เลือกห้อง --</option>
+      </select>
     </div>
-    <div id="report-text" class="report-box">เลือกห้องเพื่อสร้างรายงาน...</div>
   </div>
 
   <div class="card">
-    <div class="card-title">📅 ประวัติการเช็คชื่อ</div>
-    <div id="history-table" class="empty">ยังไม่มีข้อมูล</div>
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px">
+      <div class="card-title" style="margin:0">📋 สรุปประจำวัน (คัดลอกส่ง LINE)</div>
+      <button class="btn btn-primary btn-sm" onclick="copyReport()">📋 คัดลอกข้อความ</button>
+    </div>
+    <div id="report-text" style="background:var(--gray-light); padding:1rem; border-radius:8px; white-space:pre-wrap; font-size:14px; min-height:100px;">เลือกห้องและวันที่เพื่อดูรายงาน...</div>
   </div>
 </div>
 
-<!-- ======== PAGE: จัดการ ======== -->
+<!-- ======== PAGE: จัดการห้อง ======== -->
 <div id="page-manage" class="page">
-  <div class="section-head"><h2>จัดการห้องและนักเรียน</h2></div>
+  <div class="section-head">
+    <h2>จัดการห้องเรียน</h2>
+  </div>
 
   <div class="card">
-    <div class="card-title">➕ เพิ่มห้องเรียนใหม่</div>
+    <!-- ชี้แจงชัดเจนว่าเป็นการเพิ่มห้องให้ใคร -->
+    <div class="card-title">➕ เพิ่มห้องเรียนใหม่ สำหรับ: <span id="manage-teacher-name" style="color:var(--green)"></span></div>
     <div class="form-row">
       <div class="form-group">
-        <label>ชื่อห้อง (เช่น ม.2/1)</label>
-        <input type="text" id="new-room-name" placeholder="ม.2/1">
-      </div>
-      <div class="form-group">
-        <label>ระดับชั้น</label>
-        <input type="text" id="new-room-grade" placeholder="มัธยม 2">
+        <label>ชื่อห้องเรียน (เช่น ม.2/1 หรือ ป.6/3)</label>
+        <input type="text" id="new-room-name" placeholder="ระบุชื่อห้องเรียน">
       </div>
     </div>
-    <button class="btn btn-primary" onclick="addRoom()">➕ เพิ่มห้องเรียน</button>
+    <button class="btn btn-primary" onclick="addRoom()">บันทึกห้องเรียน</button>
   </div>
 
   <div id="rooms-list"></div>
@@ -239,50 +276,27 @@
   <div class="section-head"><h2>ตั้งค่าระบบ</h2></div>
 
   <div class="card">
-    <div class="card-title">🏫 ข้อมูลโรงเรียน</div>
-    <div class="form-group">
-      <label>ชื่อโรงเรียน</label>
-      <input type="text" id="school-name" placeholder="โรงเรียน..." onchange="saveSetting()">
-    </div>
+    <div class="card-title">👨‍🏫 ข้อมูลส่วนตัว (แก้ไขได้)</div>
     <div class="form-group">
       <label>ชื่ออาจารย์</label>
-      <input type="text" id="teacher-name" placeholder="อาจารย์..." onchange="saveSetting()">
+      <input type="text" id="set-teacher-name">
     </div>
-  </div>
-
-  <div class="card">
-    <div class="card-title">🔗 Google Sheets (บันทึกข้อมูล)</div>
     <div class="form-group">
-      <label>Google Apps Script URL</label>
-      <input type="text" id="sheet-url" placeholder="https://script.google.com/macros/s/.../exec" onchange="saveSetting()">
+      <label>รหัส PIN ใหม่ (4 หลัก)</label>
+      <input type="password" id="set-teacher-pin" maxlength="4">
     </div>
-    <div style="background:var(--blue-light);border-radius:var(--radius-sm);padding:12px;font-size:13px;color:var(--blue-dark);line-height:1.8">
-      <strong>วิธีตั้งค่า Google Sheets:</strong><br>
-      1. เปิด Google Sheets ใหม่<br>
-      2. ไปที่ Extensions → Apps Script<br>
-      3. วางโค้ด Apps Script ด้านล่าง แล้ว Deploy → Web App<br>
-      4. คัดลอก URL มาวางที่นี่
-    </div>
-    <hr class="divider">
+    <button class="btn btn-primary" onclick="updateTeacherProfile()">อัปเดตข้อมูล</button>
+  </div>
+
+  <div class="card" style="border-color:var(--green)">
+    <div class="card-title" style="color:var(--green-dark)">🔗 ฐานข้อมูลกลาง (Google Sheets)</div>
     <div class="form-group">
-      <label>Apps Script Code (คัดลอกไปวางใน Google Apps Script)</label>
-      <textarea id="apps-script-code" style="height:200px;font-family:monospace;font-size:12px" readonly></textarea>
+      <label>URL ของ Web App (Google Apps Script)</label>
+      <input type="text" id="sheet-url" placeholder="https://script.google.com/macros/s/.../exec" onchange="saveGlobalSettings()">
     </div>
-    <button class="btn btn-secondary btn-sm" onclick="copyScript()">📋 คัดลอก Script</button>
-  </div>
-
-  <div class="card">
-    <div class="card-title">📱 QR Check-in</div>
-    <div style="font-size:14px;color:var(--text-muted);line-height:1.8">
-      เมื่อเปิด QR Code ในหน้าเช็คชื่อ นักเรียนสแกนแล้วจะเข้าหน้าเช็คอิน<br>
-      กดปุ่ม "ฉันมาแล้ว" เพื่อบันทึกการมาเรียน<br>
-      ระบบจะอัปเดตสถานะในตารางอัตโนมัติ
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="card-title" style="color:var(--red-dark)">⚠️ ล้างข้อมูล</div>
-    <button class="btn btn-danger" onclick="clearAll()">ล้างข้อมูลทั้งหมด</button>
+    <p style="font-size:13px; color:var(--text-muted);">
+      * Admin ต้องเป็นคนตั้งค่า URL นี้ (ตั้งแค่เครื่องเดียวแล้วใช้ร่วมกันได้เลย) เพื่อให้นักเรียนสามารถสแกนเช็คอินจากมือถือตัวเองได้
+    </p>
   </div>
 </div>
 
@@ -290,139 +304,253 @@
 <div class="modal-overlay" id="qr-modal">
   <div class="modal">
     <h2>📱 สแกนเพื่อเช็คอิน</h2>
-    <p id="qr-room-label">ห้อง: ...</p>
+    <p id="qr-room-label" style="color:var(--text-muted); margin-bottom:8px;"></p>
     <div id="qr-container"></div>
-    <div style="font-size:13px;color:var(--text-muted);margin-bottom:1.5rem">
-      นักเรียนสแกน QR แล้วเลือกชื่อตัวเอง กด "ฉันมาแล้ว"
-    </div>
-    <button class="btn btn-secondary" onclick="closeQR()">ปิด</button>
+    <p style="font-size:13px; color:var(--text-muted); margin-bottom:1.5rem">
+      ให้นักเรียนสแกน QR Code นี้ด้วยมือถือตัวเอง<br>เลือกชื่อ แล้วกด "ฉันมาแล้ว!"
+    </p>
+    <button class="btn btn-secondary btn-block" onclick="closeQR()">ปิดหน้าต่าง</button>
   </div>
 </div>
 
 <div class="toast" id="toast"></div>
 
 <script>
-// =========== DATA LAYER ===========
-let db = { rooms: {}, attendance: {}, settings: { school:'', teacher:'' } };
+// =========== DATA STRUCTURE ===========
+// โครงสร้างข้อมูลที่ออกแบบมาสำหรับหลายอาจารย์
+let db = { 
+  teachers: {}, // เก็บรายชื่ออาจารย์และ PIN
+  rooms: {},    // เก็บห้อง โดยแต่ละห้องจะผูกกับ teacherId
+  attendance: {}, 
+  settings: { sheetUrl: '' } 
+};
+let currentTeacherId = null;
+let currentRoom = null;
+let currentPinInput = "";
 
+// Utils
+function save() { localStorage.setItem('attend_db_v3', JSON.stringify(db)); }
 function load() {
-  const saved = localStorage.getItem('attend_db');
+  const saved = localStorage.getItem('attend_db_v3');
   if (saved) db = JSON.parse(saved);
-  applySettings();
 }
-function save() { localStorage.setItem('attend_db', JSON.stringify(db)); }
-function toast(msg, dur=2000) {
+function toast(msg, dur=2500) {
   const t = document.getElementById('toast');
   t.textContent = msg; t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), dur);
 }
-function todayKey() { return new Date().toISOString().slice(0,10); }
-function thaiDate() {
-  return new Date().toLocaleDateString('th-TH',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+function getSelectedDate(id) { return document.getElementById(id).value; }
+function formatThaiDate(dateStr) {
+  if(!dateStr) return '';
+  return new Date(dateStr).toLocaleDateString('th-TH',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+}
+function todayStr() {
+  const d = new Date();
+  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+  return d.toISOString().slice(0,10);
 }
 
-// =========== PAGES ===========
+// =========== INIT & LOGIN (ระบบหน้าบ้าน) ===========
+document.getElementById('check-date').value = todayStr();
+document.getElementById('report-date').value = todayStr();
+
+function initApp() {
+  load();
+  // ถ้าเคย Login แล้วค้างไว้ ให้เข้าเลย ถ้ายังให้ไปหน้า Login
+  if(currentTeacherId && db.teachers[currentTeacherId]) showDashboard();
+  else showLogin();
+}
+
+function showLogin() {
+  document.body.style.background = "var(--green-dark)"; // เปลี่ยนสีพื้นหลังหน้า Login
+  document.getElementById('main-nav').style.display = 'none';
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-login').classList.add('active');
+  
+  const sel = document.getElementById('login-teacher-select');
+  sel.innerHTML = '<option value="">-- กรุณาเลือกชื่อของคุณ --</option>';
+  Object.values(db.teachers).forEach(t => {
+    sel.innerHTML += `<option value="${t.id}">${t.name}</option>`;
+  });
+  
+  sel.onchange = (e) => {
+    if(e.target.value) {
+      document.getElementById('pin-section').style.display = 'block';
+      clearPin();
+    } else {
+      document.getElementById('pin-section').style.display = 'none';
+    }
+  };
+}
+
+function toggleRegister() {
+  const boxL = document.getElementById('box-login');
+  const boxR = document.getElementById('box-register');
+  if(boxL.style.display === 'none') {
+    boxL.style.display = 'block'; boxR.style.display = 'none';
+  } else {
+    boxL.style.display = 'none'; boxR.style.display = 'block';
+  }
+}
+
+function registerTeacher() {
+  const name = document.getElementById('reg-name').value.trim();
+  const pin = document.getElementById('reg-pin').value.trim();
+  if(!name || pin.length !== 4) return toast('กรุณาใส่ชื่อและ PIN 4 หลักให้ครบถ้วน');
+  
+  const id = 't_' + Date.now();
+  db.teachers[id] = { id, name, pin };
+  save();
+  toast('ลงทะเบียนอาจารย์สำเร็จ! กรุณาเข้าสู่ระบบ');
+  document.getElementById('reg-name').value = '';
+  document.getElementById('reg-pin').value = '';
+  toggleRegister();
+  showLogin();
+}
+
+// ระบบกด PIN
+function addPin(num) {
+  if(currentPinInput.length < 4) currentPinInput += num;
+  updatePinDots();
+  if(currentPinInput.length === 4) verifyLogin();
+}
+function clearPin() {
+  currentPinInput = "";
+  updatePinDots();
+}
+function updatePinDots() {
+  const dots = document.getElementById('pin-dots').children;
+  for(let i=0; i<4; i++) {
+    if(i < currentPinInput.length) dots[i].classList.add('filled');
+    else dots[i].classList.remove('filled');
+  }
+}
+function verifyLogin() {
+  const tid = document.getElementById('login-teacher-select').value;
+  if(db.teachers[tid].pin === currentPinInput) {
+    currentTeacherId = tid;
+    toast(`ยินดีต้อนรับ ${db.teachers[tid].name}`);
+    showDashboard();
+  } else {
+    toast('รหัส PIN ไม่ถูกต้อง!');
+    clearPin();
+  }
+}
+function logout() {
+  currentTeacherId = null;
+  currentPinInput = "";
+  document.getElementById('pin-section').style.display = 'none';
+  showLogin();
+}
+
+// =========== DASHBOARD & NAVIGATION ===========
+function showDashboard() {
+  document.body.style.background = "var(--bg)"; // คืนสีพื้นหลังปกติ
+  document.getElementById('page-login').classList.remove('active');
+  document.getElementById('main-nav').style.display = 'flex';
+  document.getElementById('nav-teacher-name').textContent = "อ." + db.teachers[currentTeacherId].name;
+  showPage('check');
+}
+
 function showPage(name) {
+  if(!currentTeacherId) return;
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
   document.getElementById('page-'+name).classList.add('active');
-  event.target.classList.add('active');
+  
+  const tabs = document.querySelectorAll('.nav-tab');
+  tabs.forEach(t => { if(t.getAttribute('onclick').includes(name)) t.classList.add('active'); });
+
   if(name==='check') { refreshRoomSelect('room-select'); refreshCheck(); }
   if(name==='report') { refreshRoomSelect('report-room'); genReport(); }
-  if(name==='manage') renderRooms();
-  if(name==='settings') applySettings();
+  if(name==='manage') { 
+    // อัปเดตชื่ออาจารย์ในหน้าเพิ่มห้อง
+    document.getElementById('manage-teacher-name').textContent = db.teachers[currentTeacherId].name;
+    renderRooms(); 
+  }
+  if(name==='settings') loadSettingsPage();
 }
 
-// =========== ROOMS ===========
+// ฟังก์ชันกรองดึงเฉพาะห้องของตัวเอง (Isolated Teacher Accounts)
+function getMyRooms() { return Object.values(db.rooms).filter(r => r.teacherId === currentTeacherId); }
+
+function refreshRoomSelect(selId) {
+  const sel = document.getElementById(selId);
+  const myRooms = getMyRooms();
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">-- เลือกห้องในความดูแล --</option>' +
+    myRooms.map(r=>`<option value="${r.id}" ${r.id===cur?'selected':''}>${r.name}</option>`).join('');
+}
+
+// =========== MANAGE ROOMS (หน้าจัดการ) ===========
 function addRoom() {
   const name = document.getElementById('new-room-name').value.trim();
-  const grade = document.getElementById('new-room-grade').value.trim();
-  if(!name) return toast('กรุณาใส่ชื่อห้อง');
-  const id = 'r'+Date.now();
-  db.rooms[id] = { id, name, grade, students: [] };
-  save(); renderRooms(); refreshRoomSelect('room-select'); refreshRoomSelect('report-room');
+  if(!name) return toast('กรุณาระบุชื่อห้องเรียน');
+  
+  const id = 'r' + Date.now();
+  // บันทึกห้อง โดยผูกกับ teacherId ปัจจุบันอัตโนมัติ
+  db.rooms[id] = { id, teacherId: currentTeacherId, name, students: [] };
+  save(); 
+  renderRooms(); 
   document.getElementById('new-room-name').value='';
-  document.getElementById('new-room-grade').value='';
-  toast('เพิ่มห้อง '+name+' แล้ว');
+  toast(`เพิ่มห้อง ${name} สำเร็จ`);
 }
+
 function deleteRoom(id) {
-  if(!confirm('ลบห้องนี้?')) return;
-  delete db.rooms[id]; save(); renderRooms();
-  refreshRoomSelect('room-select'); refreshRoomSelect('report-room');
-  toast('ลบห้องแล้ว');
+  if(!confirm('ยืนยันการลบห้องเรียนนี้? ข้อมูลนักเรียนทั้งหมดจะหายไป')) return;
+  delete db.rooms[id]; 
+  save(); 
+  renderRooms();
 }
+
 function renderRooms() {
   const el = document.getElementById('rooms-list');
-  const rooms = Object.values(db.rooms);
-  if(!rooms.length) { el.innerHTML='<div class="empty">ยังไม่มีห้องเรียน เพิ่มห้องด้านบน</div>'; return; }
-  el.innerHTML = rooms.map(r => `
+  const myRooms = getMyRooms();
+  if(!myRooms.length) { el.innerHTML='<div class="empty">คุณยังไม่มีห้องเรียนในความดูแล<br>เพิ่มห้องด้านบนได้เลยครับ</div>'; return; }
+  
+  el.innerHTML = myRooms.map(r => `
     <div class="card">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-        <div>
-          <span class="room-tag">${r.grade||''}</span>
-          <strong style="margin-left:8px;font-size:16px">${r.name}</strong>
-          <span style="font-size:13px;color:var(--text-muted);margin-left:6px">${r.students.length} คน</span>
-        </div>
-        <button class="btn btn-danger btn-sm" onclick="deleteRoom('${r.id}')">ลบห้อง</button>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px">
+        <h3 style="margin:0; font-size:18px;">ห้อง: ${r.name} <span style="font-size:14px; color:var(--text-muted); font-weight:normal;">(${r.students.length} คน)</span></h3>
+        <button class="btn btn-danger btn-sm" onclick="deleteRoom('${r.id}')">ลบห้องทิ้ง</button>
       </div>
-      <div style="margin-bottom:10px;display:flex;gap:8px">
+      <div style="display:flex; gap:8px; margin-bottom:12px;">
         <input type="text" id="stu-name-${r.id}" placeholder="ชื่อ-นามสกุลนักเรียน" style="flex:1">
-        <button class="btn btn-primary btn-sm" onclick="addStudent('${r.id}')">+ เพิ่ม</button>
-      </div>
-      <div style="margin-bottom:8px;display:flex;gap:8px">
-        <textarea id="bulk-${r.id}" placeholder="เพิ่มหลายคนพร้อมกัน (บรรทัดละ 1 คน)&#10;เช่น&#10;สมชาย ใจดี&#10;สมหญิง รักเรียน" style="flex:1;height:80px;font-size:13px"></textarea>
-        <button class="btn btn-secondary btn-sm" onclick="bulkAdd('${r.id}')" style="align-self:flex-end">+ เพิ่มทีเดียว</button>
+        <button class="btn btn-primary" onclick="addStudent('${r.id}')">+ เพิ่มนักเรียน</button>
       </div>
       <div class="table-wrap">
         <table>
-          <thead><tr><th style="width:36px">#</th><th>ชื่อ-นามสกุล</th><th style="width:60px">ลบ</th></tr></thead>
+          <thead><tr><th style="width:40px; text-align:center;">เลขที่</th><th>ชื่อ-นามสกุล</th><th style="width:60px">ลบ</th></tr></thead>
           <tbody>${r.students.map((s,i)=>`
             <tr>
-              <td style="color:var(--text-muted)">${i+1}</td>
+              <td style="color:var(--text-muted); text-align:center;">${i+1}</td>
               <td>${s.name}</td>
-              <td><button class="btn btn-danger btn-icon btn-sm" onclick="deleteStudent('${r.id}','${s.id}')">✕</button></td>
+              <td><button class="btn btn-danger btn-sm" style="padding:4px 8px;" onclick="deleteStudent('${r.id}','${s.id}')">✕</button></td>
             </tr>`).join('')}
           </tbody>
         </table>
-        ${!r.students.length?'<div class="empty" style="padding:1rem">ยังไม่มีนักเรียน</div>':''}
       </div>
     </div>`).join('');
 }
 function addStudent(rid) {
   const inp = document.getElementById('stu-name-'+rid);
   const name = inp.value.trim();
-  if(!name) return toast('กรุณาใส่ชื่อ');
-  db.rooms[rid].students.push({ id:'s'+Date.now()+Math.random(), name });
-  save(); renderRooms(); inp.value=''; toast('เพิ่ม '+name+' แล้ว');
-}
-function bulkAdd(rid) {
-  const txt = document.getElementById('bulk-'+rid).value.trim();
-  if(!txt) return;
-  const names = txt.split('\n').map(s=>s.trim()).filter(Boolean);
-  names.forEach(name => db.rooms[rid].students.push({ id:'s'+Date.now()+Math.random()+name, name }));
-  save(); renderRooms(); toast('เพิ่ม '+names.length+' คนแล้ว');
+  if(!name) return;
+  db.rooms[rid].students.push({ id:'s'+Date.now(), name });
+  save(); renderRooms(); inp.value='';
 }
 function deleteStudent(rid, sid) {
   db.rooms[rid].students = db.rooms[rid].students.filter(s=>s.id!==sid);
   save(); renderRooms();
 }
 
-// =========== CHECK ===========
-let currentRoom = null;
-function refreshRoomSelect(selId) {
-  const sel = document.getElementById(selId);
-  const rooms = Object.values(db.rooms);
-  const cur = sel.value;
-  sel.innerHTML = '<option value="">-- เลือกห้อง --</option>' +
-    rooms.map(r=>`<option value="${r.id}" ${r.id===cur?'selected':''}>${r.name} (${r.grade||''})</option>`).join('');
-}
+// =========== CHECK ATTENDANCE ===========
 function loadRoom() {
   const rid = document.getElementById('room-select').value;
   currentRoom = rid ? db.rooms[rid] : null;
   refreshCheck();
 }
 function refreshCheck() {
-  document.getElementById('today-label').textContent = thaiDate();
   if(!currentRoom) {
     document.getElementById('check-empty').style.display='block';
     document.getElementById('check-content').style.display='none';
@@ -433,27 +561,25 @@ function refreshCheck() {
   renderStudentTable();
   updateStats();
 }
-function getAtt(rid, sid) {
-  const key = todayKey();
-  return (db.attendance[rid]?.[key]?.[sid]) || 'none';
-}
+function getAtt(rid, sid, dateStr) { return (db.attendance[rid]?.[dateStr]?.[sid]) || 'none'; }
 function setAtt(rid, sid, status) {
-  const key = todayKey();
+  const dateStr = getSelectedDate('check-date');
   if(!db.attendance[rid]) db.attendance[rid]={};
-  if(!db.attendance[rid][key]) db.attendance[rid][key]={};
-  db.attendance[rid][key][sid] = status;
+  if(!db.attendance[rid][dateStr]) db.attendance[rid][dateStr]={};
+  db.attendance[rid][dateStr][sid] = status;
   save(); updateStats();
 }
 function renderStudentTable() {
   if(!currentRoom) return;
+  const dateStr = getSelectedDate('check-date');
   const tbody = document.getElementById('student-table');
   tbody.innerHTML = currentRoom.students.map((s,i) => {
-    const att = getAtt(currentRoom.id, s.id);
+    const att = getAtt(currentRoom.id, s.id, dateStr);
     return `<tr>
-      <td style="color:var(--text-muted)">${i+1}</td>
+      <td style="color:var(--text-muted); text-align:center;">${i+1}</td>
       <td><strong>${s.name}</strong></td>
       ${['present','late','absent','leave'].map(st=>`
-        <td style="text-align:center">
+        <td>
           <button class="att-btn ${att===st?'sel-'+st:''}"
             onclick="setAtt('${currentRoom.id}','${s.id}','${st}');renderStudentTable()">
             ${st==='present'?'✅ มา':st==='late'?'⏰ สาย':st==='absent'?'❌ ขาด':'📝 ลา'}
@@ -464,13 +590,12 @@ function renderStudentTable() {
 }
 function updateStats() {
   if(!currentRoom) return;
-  const key = todayKey();
-  const att = db.attendance[currentRoom.id]?.[key] || {};
+  const dateStr = getSelectedDate('check-date');
+  const att = db.attendance[currentRoom.id]?.[dateStr] || {};
   let p=0,l=0,a=0,lv=0;
   currentRoom.students.forEach(s=>{
     const v=att[s.id]||'none';
-    if(v==='present')p++; else if(v==='late')l++;
-    else if(v==='absent')a++; else if(v==='leave')lv++;
+    if(v==='present')p++; else if(v==='late')l++; else if(v==='absent')a++; else if(v==='leave')lv++;
   });
   document.getElementById('s-present').textContent=p;
   document.getElementById('s-late').textContent=l;
@@ -482,191 +607,162 @@ function markAll(status) {
   if(!currentRoom) return;
   currentRoom.students.forEach(s => setAtt(currentRoom.id, s.id, status));
   renderStudentTable();
-  toast('บันทึกทั้งหมดเป็น "มา" แล้ว');
 }
 
-// =========== QR ===========
-let checkInterval = null;
-function openQR() {
-  if(!currentRoom) return toast('กรุณาเลือกห้องก่อน');
+// =========== CLOUD SYNC & QR CODE ===========
+async function openQR() {
+  if(!currentRoom) return;
+  const gasUrl = db.settings.sheetUrl;
+  if(!gasUrl) return toast('⚠️ กรุณาไปที่ "ตั้งค่า" และใส่ Google Sheets URL ก่อนสร้าง QR');
+
+  const btn = document.getElementById('btn-create-qr');
+  btn.disabled = true;
+  btn.textContent = 'กำลังซิงค์ขึ้น Cloud...';
+  
+  try {
+    const res = await fetch(gasUrl, {
+      method: 'POST',
+      body: JSON.stringify({ action: 'syncRoom', room: currentRoom })
+    });
+    const result = await res.json();
+    if(result.success) toast('✅ ซิงค์ห้องเรียนสำเร็จ');
+    else throw new Error();
+  } catch(e) {
+    toast('❌ ซิงค์ล้มเหลว ตรวจสอบ URL หรืออินเทอร์เน็ต');
+    btn.disabled = false;
+    btn.textContent = '📱 1. สร้าง QR ให้นักเรียนสแกน';
+    return;
+  }
+
+  btn.disabled = false;
+  btn.textContent = '📱 1. สร้าง QR ให้นักเรียนสแกน';
+
+  const dateStr = getSelectedDate('check-date');
   const modal = document.getElementById('qr-modal');
-  document.getElementById('qr-room-label').textContent = 'ห้อง: '+currentRoom.name+' | '+thaiDate();
+  document.getElementById('qr-room-label').innerHTML = `ห้อง <strong>${currentRoom.name}</strong><br>ประจำวันที่ ${formatThaiDate(dateStr)}`;
   document.getElementById('qr-container').innerHTML = '';
-  const base = window.location.href.replace('attendance-app.html','checkin.html');
-  const url = `${base}?rid=${currentRoom.id}&date=${todayKey()}&room=${encodeURIComponent(currentRoom.name)}`;
+  
+  const base = window.location.href.split('?')[0].replace('attendance-app.html', 'checkin.html');
+  const url = `${base}?rid=${currentRoom.id}&date=${dateStr}&room=${encodeURIComponent(currentRoom.name)}&gas=${encodeURIComponent(gasUrl)}`;
+  
   new QRCode(document.getElementById('qr-container'), {
-    text: url, width: 220, height: 220, colorDark:'#085041', colorLight:'#E1F5EE',
-    correctLevel: QRCode.CorrectLevel.M
+    text: url, width: 220, height: 220, colorDark:'#085041', colorLight:'#E1F5EE', correctLevel: QRCode.CorrectLevel.M
   });
+  
   modal.classList.add('open');
-  checkInterval = setInterval(() => {
-    load(); renderStudentTable(); updateStats();
-  }, 3000);
 }
-function closeQR() {
-  document.getElementById('qr-modal').classList.remove('open');
-  if(checkInterval) clearInterval(checkInterval);
+function closeQR() { document.getElementById('qr-modal').classList.remove('open'); }
+
+async function pullDataFromSheets() {
+  if(!currentRoom) return toast('กรุณาเลือกห้องก่อน');
+  const gasUrl = db.settings.sheetUrl;
+  if(!gasUrl) return toast('ไม่พบ URL ฐานข้อมูลกลาง');
+
+  const dateStr = getSelectedDate('check-date');
+  toast('กำลังดึงข้อมูล...');
+  
+  try {
+    const res = await fetch(gasUrl, {
+      method: 'POST',
+      body: JSON.stringify({ action: 'getAttendance', rid: currentRoom.id, date: dateStr })
+    });
+    const liveAtt = await res.json(); 
+    
+    if(!db.attendance[currentRoom.id]) db.attendance[currentRoom.id] = {};
+    if(!db.attendance[currentRoom.id][dateStr]) db.attendance[currentRoom.id][dateStr] = {};
+    
+    Object.keys(liveAtt).forEach(sid => {
+      db.attendance[currentRoom.id][dateStr][sid] = liveAtt[sid];
+    });
+    
+    save(); renderStudentTable(); updateStats();
+    toast('✅ อัปเดตข้อมูลสำเร็จ');
+  } catch(e) { toast('❌ ดึงข้อมูลไม่สำเร็จ'); }
+}
+
+async function saveToSheets() {
+  const url = db.settings.sheetUrl;
+  if(!url) return toast('กรุณาตั้งค่า Google Sheets URL ก่อน');
+  if(!currentRoom) return toast('กรุณาเลือกห้องก่อนทำรายการ');
+  
+  const dateStr = getSelectedDate('check-date');
+  const att = db.attendance[currentRoom.id]?.[dateStr]||{};
+  const teacher = db.teachers[currentTeacherId];
+  
+  const rows = currentRoom.students.map(s => ({
+    date: dateStr, rid: currentRoom.id, roomName: currentRoom.name, 
+    sid: s.id, studentName: s.name, status: att[s.id]||'none', teacher: teacher.name
+  })).filter(r => r.status !== 'none'); 
+  
+  try {
+    toast('กำลังบันทึกข้อมูล...');
+    await fetch(url, { method:'POST', body:JSON.stringify({action:'saveAttendanceBulk', rows}) });
+    toast('✅ บันทึกลง Google Sheets สำเร็จ!');
+  } catch(e) { toast('❌ เกิดข้อผิดพลาด'); }
 }
 
 // =========== REPORT ===========
 function genReport() {
   const rid = document.getElementById('report-room').value;
-  const room = rid ? db.rooms[rid] : null;
-  const key = todayKey();
-  if(!room) { document.getElementById('report-text').textContent='เลือกห้องเพื่อสร้างรายงาน...'; return; }
-
-  const att = db.attendance[rid]?.[key] || {};
+  const dateStr = getSelectedDate('report-date');
+  if(!rid || !dateStr) { document.getElementById('report-text').textContent = 'เลือกห้องและวันที่เพื่อดูรายงาน...'; return; }
+  
+  const room = db.rooms[rid];
+  const teacher = db.teachers[currentTeacherId];
+  const att = db.attendance[rid]?.[dateStr] || {};
+  
   const absent=[], late=[], leave=[], present=[];
-  room.students.forEach(s=>{
-    const v=att[s.id]||'none';
-    if(v==='absent')absent.push(s.name);
-    else if(v==='late')late.push(s.name);
-    else if(v==='leave')leave.push(s.name);
-    else if(v==='present')present.push(s.name);
+  room.students.forEach((s, i)=>{
+    const v = att[s.id]||'none';
+    const nameStr = `${i+1}. ${s.name}`;
+    if(v==='absent') absent.push(nameStr); else if(v==='late') late.push(nameStr);
+    else if(v==='leave') leave.push(nameStr); else if(v==='present') present.push(nameStr);
   });
 
-  const school = db.settings.school || 'โรงเรียน';
-  const teacher = db.settings.teacher || 'ครู';
-  let txt = `📋 รายงานเช็คชื่อเข้าแถว\n`;
-  txt += `🏫 ${school}\n`;
-  txt += `📅 ${thaiDate()}\n`;
-  txt += `🚪 ห้อง ${room.name} ${room.grade?'('+room.grade+')':''}\n`;
-  txt += `👩‍🏫 ครูประจำชั้น: ${teacher}\n`;
-  txt += `━━━━━━━━━━━━━━━━\n`;
-  txt += `✅ มาเรียน: ${present.length} คน\n`;
-  txt += `⏰ มาสาย: ${late.length} คน\n`;
-  txt += `❌ ขาด: ${absent.length} คน\n`;
-  txt += `📝 ลา: ${leave.length} คน\n`;
-  txt += `👥 รวม: ${room.students.length} คน\n`;
-  if(absent.length) { txt += `━━━━━━━━━━━━━━━━\n❌ รายชื่อขาด:\n`; absent.forEach((n,i)=>txt+=`  ${i+1}. ${n}\n`); }
-  if(late.length) { txt += `⏰ รายชื่อมาสาย:\n`; late.forEach((n,i)=>txt+=`  ${i+1}. ${n}\n`); }
-  if(leave.length) { txt += `📝 รายชื่อลา:\n`; leave.forEach((n,i)=>txt+=`  ${i+1}. ${n}\n`); }
-  txt += `━━━━━━━━━━━━━━━━\nส่งโดยระบบเช็คชื่ออัตโนมัติ`;
-
-  document.getElementById('report-text').textContent = txt;
-
-  // stats
-  const allDays = Object.keys(db.attendance[rid]||{}).sort().reverse().slice(0,30);
-  let statsHtml = `<div class="stats-grid">
-    <div class="stat green"><div class="stat-n">${present.length}</div><div class="stat-label">มาวันนี้</div></div>
-    <div class="stat red"><div class="stat-n">${absent.length}</div><div class="stat-label">ขาดวันนี้</div></div>
-    <div class="stat amber"><div class="stat-n">${late.length}</div><div class="stat-label">สายวันนี้</div></div>
-    <div class="stat blue"><div class="stat-n">${leave.length}</div><div class="stat-label">ลาวันนี้</div></div>
-  </div>`;
-  document.getElementById('report-stats').innerHTML = statsHtml;
-
-  // history
-  if(allDays.length) {
-    let hHtml = `<div class="table-wrap"><table>
-      <thead><tr><th>วันที่</th><th>มา</th><th>สาย</th><th>ขาด</th><th>ลา</th></tr></thead><tbody>`;
-    allDays.forEach(d => {
-      const a = db.attendance[rid][d]||{};
-      let p2=0,l2=0,ab=0,lv2=0;
-      room.students.forEach(s=>{
-        const v=a[s.id]||'none';
-        if(v==='present')p2++; else if(v==='late')l2++;
-        else if(v==='absent')ab++; else if(v==='leave')lv2++;
-      });
-      hHtml+=`<tr><td>${d}</td>
-        <td><span class="pill pill-present">${p2}</span></td>
-        <td><span class="pill pill-late">${l2}</span></td>
-        <td><span class="pill pill-absent">${ab}</span></td>
-        <td><span class="pill pill-leave">${lv2}</span></td></tr>`;
-    });
-    hHtml+='</tbody></table></div>';
-    document.getElementById('history-table').innerHTML = hHtml;
-  } else {
-    document.getElementById('history-table').innerHTML='<div class="empty">ยังไม่มีประวัติ</div>';
+  let txt = `📋 รายงานเช็คชื่อเข้าแถว\n📅 ประจำวันที่: ${formatThaiDate(dateStr)}\n🚪 ห้อง: ${room.name}\n👨‍🏫 ครูประจำชั้น: ${teacher.name}\n━━━━━━━━━━━━━━━━\n`;
+  txt += `✅ มา: ${present.length} | ⏰ สาย: ${late.length} | ❌ ขาด: ${absent.length} | 📝 ลา: ${leave.length}\n👥 ยอดรวม: ${room.students.length} คน\n`;
+  if(absent.length || late.length || leave.length) {
+    txt += `━━━━━━━━━━━━━━━━\n`;
+    if(absent.length) txt += `❌ รายชื่อขาด (${absent.length}):\n${absent.join('\n')}\n\n`;
+    if(late.length) txt += `⏰ รายชื่อสาย (${late.length}):\n${late.join('\n')}\n\n`;
+    if(leave.length) txt += `📝 รายชื่อลา (${leave.length}):\n${leave.join('\n')}\n\n`;
   }
+  document.getElementById('report-text').textContent = txt.trim();
 }
+
 function copyReport() {
   const txt = document.getElementById('report-text').textContent;
+  if(!txt || txt.includes('เลือกห้อง')) return;
   if(navigator.clipboard) {
-    navigator.clipboard.writeText(txt).then(()=>toast('คัดลอกแล้ว! วางใน LINE ได้เลย 📱'));
+    navigator.clipboard.writeText(txt).then(()=>toast('คัดลอกข้อความสำเร็จ! นำไปวางใน LINE ได้เลย'));
   } else {
-    const ta = document.createElement('textarea');
-    ta.value=txt; document.body.appendChild(ta); ta.select();
-    document.execCommand('copy'); document.body.removeChild(ta);
-    toast('คัดลอกแล้ว! วางใน LINE ได้เลย 📱');
+    const ta = document.createElement('textarea'); ta.value=txt; document.body.appendChild(ta); ta.select();
+    document.execCommand('copy'); document.body.removeChild(ta); toast('คัดลอกข้อความสำเร็จ!');
   }
 }
 
 // =========== SETTINGS ===========
-function applySettings() {
-  document.getElementById('school-name').value = db.settings.school||'';
-  document.getElementById('teacher-name').value = db.settings.teacher||'';
-  document.getElementById('sheet-url').value = db.settings.sheetUrl||'';
-  document.getElementById('apps-script-code').value = getAppsScript();
-}
-function saveSetting() {
-  db.settings.school = document.getElementById('school-name').value;
-  db.settings.teacher = document.getElementById('teacher-name').value;
-  db.settings.sheetUrl = document.getElementById('sheet-url').value;
-  save(); toast('บันทึกการตั้งค่าแล้ว');
-}
-function copyScript() {
-  navigator.clipboard.writeText(getAppsScript()).then(()=>toast('คัดลอก Script แล้ว'));
-}
-function clearAll() {
-  if(confirm('ล้างข้อมูลทั้งหมด? (ไม่สามารถกู้คืนได้)')) {
-    db={rooms:{},attendance:{},settings:{school:'',teacher:''}};
-    save(); load(); toast('ล้างข้อมูลแล้ว');
-    renderRooms(); refreshRoomSelect('room-select'); refreshRoomSelect('report-room');
-  }
+function loadSettingsPage() {
+  const t = db.teachers[currentTeacherId];
+  document.getElementById('set-teacher-name').value = t.name;
+  document.getElementById('set-teacher-pin').value = t.pin;
+  document.getElementById('sheet-url').value = db.settings.sheetUrl || '';
 }
 
-// =========== GOOGLE SHEETS ===========
-async function saveToSheets() {
-  const url = db.settings.sheetUrl;
-  if(!url) return toast('กรุณาตั้งค่า Google Sheets URL ก่อน (เมนูตั้งค่า)');
-  if(!currentRoom) return toast('กรุณาเลือกห้องก่อน');
-  const key = todayKey();
-  const att = db.attendance[currentRoom.id]?.[key]||{};
-  const rows = currentRoom.students.map(s=>({
-    date: key, room: currentRoom.name, grade: currentRoom.grade,
-    name: s.name, status: att[s.id]||'none',
-    school: db.settings.school, teacher: db.settings.teacher
-  }));
-  try {
-    toast('กำลังบันทึก...');
-    await fetch(url, {method:'POST',body:JSON.stringify({action:'save',rows}),headers:{'Content-Type':'text/plain'}});
-    toast('บันทึกลง Google Sheets แล้ว ✅');
-  } catch(e) { toast('เกิดข้อผิดพลาด: '+e.message); }
+function updateTeacherProfile() {
+  const name = document.getElementById('set-teacher-name').value.trim();
+  const pin = document.getElementById('set-teacher-pin').value.trim();
+  if(!name || pin.length !== 4) return toast('ข้อมูลไม่ถูกต้อง (PIN ต้อง 4 หลัก)');
+  db.teachers[currentTeacherId].name = name; db.teachers[currentTeacherId].pin = pin; save();
+  document.getElementById('nav-teacher-name').textContent = "อ." + name; toast('อัปเดตข้อมูลส่วนตัวแล้ว');
 }
 
-function getAppsScript() {
-return `// Google Apps Script - วางในไฟล์ Code.gs
-// Deploy → New deployment → Web app → Anyone
-
-function doPost(e) {
-  const data = JSON.parse(e.postData.contents);
-  if (data.action === 'save') {
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
-    let sheet = ss.getSheetByName('Attendance');
-    if (!sheet) {
-      sheet = ss.insertSheet('Attendance');
-      sheet.appendRow(['วันที่','โรงเรียน','ห้อง','ระดับชั้น','ชื่อนักเรียน','สถานะ','ครู']);
-    }
-    data.rows.forEach(r => {
-      sheet.appendRow([r.date, r.school, r.room, r.grade, r.name, r.status, r.teacher]);
-    });
-  }
-  return ContentService.createTextOutput(JSON.stringify({ok:true}))
-    .setMimeType(ContentService.MimeType.JSON);
+function saveGlobalSettings() {
+  db.settings.sheetUrl = document.getElementById('sheet-url').value.trim(); save(); toast('บันทึกการตั้งค่าระบบแล้ว');
 }
 
-function doGet(e) {
-  return ContentService.createTextOutput('Attendance API ready');
-}`;
-}
-
-// =========== INIT ===========
-load();
-refreshRoomSelect('room-select');
-refreshRoomSelect('report-room');
-refreshCheck();
-renderRooms();
-document.getElementById('today-label').textContent = thaiDate();
+// Start
+initApp();
 </script>
 </body>
 </html>
