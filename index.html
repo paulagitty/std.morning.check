@@ -74,7 +74,7 @@
   .btn-block { width: 100%; padding: 12px; }
 
   input, select, textarea { width: 100%; padding: 12px 14px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-family: inherit; font-size: 15px; background: #fff; color: var(--text); transition: 0.2s; }
-  input:focus, select:focus { outline: none; border-color: var(--green); }
+  input:focus, select:focus, textarea:focus { outline: none; border-color: var(--green); }
   label { font-size: 13px; color: var(--text-muted); margin-bottom: 6px; display: block; font-weight: 500; }
   .form-group { margin-bottom: 1rem; text-align: left; }
   .form-row { display: grid; grid-template-columns: 1fr; gap: 12px; margin-bottom: 12px; }
@@ -90,6 +90,15 @@
   .att-btn.sel-absent { background: var(--red-light); border-color: var(--red); color: var(--red-dark); }
   .att-btn.sel-late { background: var(--amber-light); border-color: var(--amber); color: var(--amber-dark); }
   .att-btn.sel-leave { background: var(--blue-light); border-color: var(--blue); color: var(--blue-dark); }
+
+  /* ROOM TABS (หน้าจัดการห้อง) */
+  #rooms-tabs-container { display: flex; gap: 8px; overflow-x: auto; margin-bottom: 1rem; padding-bottom: 4px; scrollbar-width: none; }
+  #rooms-tabs-container::-webkit-scrollbar { display: none; }
+  .room-tab { padding: 10px 20px; background: #fff; border: 1.5px solid var(--border); border-radius: 10px; cursor: pointer; white-space: nowrap; font-weight: 600; color: var(--text-muted); font-size: 15px; transition: 0.2s; font-family: inherit; box-shadow: var(--shadow); }
+  .room-tab.active { background: var(--green); color: white; border-color: var(--green); box-shadow: 0 4px 12px rgba(29, 158, 117, 0.3); }
+  .room-tab:hover:not(.active) { background: var(--green-light); border-color: var(--green); color: var(--green-dark); }
+  
+  .bulk-input { width: 100%; height: 120px; resize: vertical; padding: 12px; border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-family: inherit; font-size: 14px; margin-bottom: 12px; line-height: 1.6; }
 
   /* MODALS & TOASTS */
   .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 200; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
@@ -255,18 +264,20 @@
     <h2>จัดการห้องเรียน</h2>
   </div>
 
-  <div class="card">
-    <div class="card-title">➕ เพิ่มห้องเรียนใหม่ สำหรับ: <span id="manage-teacher-name" style="color:var(--green)"></span></div>
-    <div class="form-row">
-      <div class="form-group">
-        <label>ชื่อห้องเรียน (เช่น ม.2/1 หรือ ป.6/3)</label>
-        <input type="text" id="new-room-name" placeholder="ระบุชื่อห้องเรียน">
-      </div>
+  <div class="card" style="border-top: 4px solid var(--amber);">
+    <div class="card-title">➕ สร้างห้องเรียนใหม่ สำหรับ: <span id="manage-teacher-name" style="color:var(--green)"></span></div>
+    <div style="display: flex; gap: 8px;">
+      <input type="text" id="new-room-name" placeholder="ระบุชื่อห้องเรียน เช่น ม.2/1 หรือ ป.6/3" style="flex:1;">
+      <button class="btn btn-primary" onclick="addRoom()">สร้างห้อง</button>
     </div>
-    <button class="btn btn-primary" onclick="addRoom()">บันทึกห้องเรียน</button>
   </div>
 
-  <div id="rooms-list"></div>
+  <!-- แท็บรายชื่อห้อง -->
+  <div id="rooms-tabs-container"></div>
+  
+  <!-- พื้นที่แสดงข้อมูลของห้องที่เลือกจากแท็บ -->
+  <div id="rooms-content-container"></div>
+
 </div>
 
 <!-- ======== PAGE: ตั้งค่า ======== -->
@@ -326,6 +337,7 @@ let db = {
 let currentTeacherId = null;
 let currentRoom = null;
 let currentPinInput = "";
+let activeRoomTabId = null; // เก็บค่าว่าตอนนี้เปิดแท็บห้องไหนอยู่
 
 function save() { localStorage.setItem('attend_db_v3', JSON.stringify(db)); }
 function load() {
@@ -358,7 +370,7 @@ function initApp() {
 }
 
 function injectMockData() {
-  toast('กำลังสร้างข้อมูลจำลองและสุ่มการเช็คชื่อ กรุณารอสักครู่...');
+  toast('กำลังสร้างข้อมูลจำลอง กรุณารอสักครู่...');
   setTimeout(() => {
     db = { teachers: {}, rooms: {}, attendance: {}, settings: { sheetUrl: db.settings.sheetUrl } };
     
@@ -367,7 +379,6 @@ function injectMockData() {
     const firstNames = ['สมชาย', 'สมหญิง', 'มานะ', 'มานี', 'ปิติ', 'ชูใจ', 'วีระ', 'เพชร', 'พลอย', 'ฟ้า', 'ตะวัน', 'วิน', 'น้ำ', 'ดิน', 'ไม้', 'ก้อง', 'กล้า', 'แก้ว', 'ขวัญ', 'เอก', 'นพ', 'ดาว', 'เดือน', 'เด่น', 'ชัย'];
     const lastNames = ['ใจดี', 'รักเรียน', 'ขยันยิ่ง', 'มุ่งมั่น', 'สุขสันต์', 'พากเพียร', 'กล้าหาญ', 'รุ่งเรือง', 'สว่างวงศ์', 'ดีเลิศ', 'เจริญทรัพย์', 'มั่นคง', 'ยอดเยี่ยม', 'ประเสริฐ', 'บุญมา'];
     
-    // อัตราส่วนการสุ่ม: มา 70%, สาย 10%, ขาด 10%, ลา 10%
     const statuses = ['present', 'present', 'present', 'present', 'present', 'present', 'present', 'late', 'absent', 'leave'];
     const today = todayStr();
 
@@ -379,7 +390,6 @@ function injectMockData() {
       let sub = ((i - 1) % 4) + 1;  
       db.rooms[rId] = { id: rId, teacherId: tId, name: `ม.${grade}/${sub}`, students: [] };
       
-      // สร้าง Object เก็บข้อมูลเช็คชื่อสำหรับห้องนี้ในวันนี้
       db.attendance[rId] = {};
       db.attendance[rId][today] = {};
 
@@ -389,7 +399,6 @@ function injectMockData() {
         
         db.rooms[rId].students.push({ id: sId, name: rName });
         
-        // สุ่มสถานะการเช็คชื่อให้นักเรียนคนนี้
         let randomStatus = statuses[Math.floor(Math.random() * statuses.length)];
         db.attendance[rId][today][sId] = randomStatus;
       }
@@ -507,60 +516,152 @@ function refreshRoomSelect(selId) {
     myRooms.map(r=>`<option value="${r.id}" ${r.id===cur?'selected':''}>${r.name}</option>`).join('');
 }
 
-// =========== MANAGE ROOMS ===========
+// =========== MANAGE ROOMS & AUTO-SYNC ===========
+// ฟังก์ชันแอบส่งข้อมูลไปเซฟบน Google Sheets
+async function autoSyncRoomToCloud(roomObj) {
+  const gasUrl = db.settings.sheetUrl;
+  if(!gasUrl) return; // ถ้าไม่ได้ใส่ URL ไว้ ก็ให้ข้ามไปเลย
+  
+  try {
+    toast('⏳ กำลังอัปเดตรายชื่อขึ้น Google Sheets...', 1500);
+    const res = await fetch(gasUrl, {
+      method: 'POST',
+      body: JSON.stringify({ action: 'syncRoom', room: roomObj })
+    });
+    const result = await res.json();
+    if(result.success) {
+      toast('☁️ ซิงค์เข้า Google Sheets อัตโนมัติเรียบร้อย!', 2000);
+    }
+  } catch(e) {
+    console.error(e);
+  }
+}
+
 function addRoom() {
   const name = document.getElementById('new-room-name').value.trim();
   if(!name) return toast('กรุณาระบุชื่อห้องเรียน');
   const id = 'r' + Date.now();
   db.rooms[id] = { id, teacherId: currentTeacherId, name, students: [] };
-  save(); renderRooms(); document.getElementById('new-room-name').value='';
-  toast(`เพิ่มห้อง ${name} สำเร็จ`);
+  save(); 
+  
+  activeRoomTabId = id; // เปลี่ยนแท็บไปหน้าห้องใหม่ทันที
+  renderRooms(); 
+  document.getElementById('new-room-name').value='';
+  toast(`สร้างห้อง ${name} สำเร็จ`);
+  
+  autoSyncRoomToCloud(db.rooms[id]); // ส่งไปเซฟบนคลาวด์
 }
 
 function deleteRoom(id) {
   if(!confirm('ยืนยันการลบห้องเรียนนี้? ข้อมูลนักเรียนทั้งหมดจะหายไป')) return;
-  delete db.rooms[id]; save(); renderRooms();
+  delete db.rooms[id]; 
+  save(); 
+  
+  // ถ้าลบแท็บที่เปิดอยู่ ให้เคลียร์ค่าทิ้ง
+  if(activeRoomTabId === id) activeRoomTabId = null;
+  renderRooms();
+}
+
+function switchRoomTab(rid) {
+  activeRoomTabId = rid;
+  renderRooms();
 }
 
 function renderRooms() {
-  const el = document.getElementById('rooms-list');
+  const tabsEl = document.getElementById('rooms-tabs-container');
+  const contentEl = document.getElementById('rooms-content-container');
   const myRooms = getMyRooms();
-  if(!myRooms.length) { el.innerHTML='<div class="empty">คุณยังไม่มีห้องเรียนในความดูแล<br>เพิ่มห้องด้านบนได้เลยครับ</div>'; return; }
   
-  el.innerHTML = myRooms.map(r => `
-    <div class="card">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px">
-        <h3 style="margin:0; font-size:18px;">ห้อง: ${r.name} <span style="font-size:14px; color:var(--text-muted); font-weight:normal;">(${r.students.length} คน)</span></h3>
-        <button class="btn btn-danger btn-sm" onclick="deleteRoom('${r.id}')">ลบห้องทิ้ง</button>
+  if(!myRooms.length) { 
+    tabsEl.innerHTML = '';
+    contentEl.innerHTML='<div class="empty">คุณยังไม่มีห้องเรียนในความดูแล<br>สร้างห้องด้านบนได้เลยครับ</div>'; 
+    return; 
+  }
+  
+  // ถ้าไม่ได้เลือกแท็บไหน ให้เลือกแท็บแรกสุดอัตโนมัติ
+  if(!activeRoomTabId || !myRooms.find(r => r.id === activeRoomTabId)) {
+    activeRoomTabId = myRooms[0].id;
+  }
+  
+  // สร้างปุ่มแท็บ
+  tabsEl.innerHTML = myRooms.map(r => `
+    <button class="room-tab ${r.id === activeRoomTabId ? 'active' : ''}" onclick="switchRoomTab('${r.id}')">
+      ${r.name} <span style="font-size:12px; opacity:0.8;">(${r.students.length})</span>
+    </button>
+  `).join('');
+  
+  // สร้างเนื้อหาของห้องที่เลือก (ช่องก๊อปปี้วาง และตารางรายชื่อ)
+  const activeRoom = myRooms.find(r => r.id === activeRoomTabId);
+  
+  contentEl.innerHTML = `
+    <div class="card" style="border-top: 4px solid var(--green);">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+        <h3 style="margin:0; font-size:18px;">จัดการนักเรียนห้อง: <span style="color:var(--green)">${activeRoom.name}</span></h3>
+        <button class="btn btn-danger btn-sm" onclick="deleteRoom('${activeRoom.id}')">🗑️ ลบห้องนี้ทิ้ง</button>
       </div>
-      <div style="display:flex; gap:8px; margin-bottom:12px;">
-        <input type="text" id="stu-name-${r.id}" placeholder="ชื่อ-นามสกุลนักเรียน" style="flex:1">
-        <button class="btn btn-primary" onclick="addStudent('${r.id}')">+ เพิ่มนักเรียน</button>
+
+      <!-- กล่อง Bulk Add (เพิ่มทีละหลายคน) -->
+      <div style="background: var(--green-light); padding: 1rem; border-radius: 12px; margin-bottom: 1.5rem;">
+        <label style="font-weight: 600; color: var(--green-dark); font-size:14px;">➕ เพิ่มรายชื่อนักเรียน (ก๊อปปี้วางได้เลย)</label>
+        <p style="font-size: 13px; color: var(--green-dark); opacity: 0.8; margin-bottom: 8px;">
+          * พิมพ์หรือวางรายชื่อนักเรียน (ให้แต่ละคนอยู่คนละบรรทัด) จากนั้นกดปุ่มสีเขียว<br>
+          * ระบบจะบันทึกและซิงค์เข้า Google Sheets ให้อัตโนมัติทันที
+        </p>
+        <textarea id="bulk-students-${activeRoom.id}" class="bulk-input" placeholder="ตัวอย่างการวางรายชื่อ:&#10;เด็กชายสมชาย มั่นคง&#10;เด็กหญิงสมหญิง ใจดี&#10;นายนพดล รุ่งเรือง"></textarea>
+        <button class="btn btn-primary" onclick="bulkAddStudents('${activeRoom.id}')">💾 บันทึกรายชื่อทั้งหมด</button>
       </div>
+
+      <!-- ตารางรายชื่อ -->
       <div class="table-wrap">
         <table>
           <thead><tr><th style="width:40px; text-align:center;">เลขที่</th><th>ชื่อ-นามสกุล</th><th style="width:60px">ลบ</th></tr></thead>
-          <tbody>${r.students.map((s,i)=>`
+          <tbody>${activeRoom.students.map((s,i)=>`
             <tr>
               <td style="color:var(--text-muted); text-align:center;">${i+1}</td>
-              <td>${s.name}</td>
-              <td><button class="btn btn-danger btn-sm" style="padding:4px 8px;" onclick="deleteStudent('${r.id}','${s.id}')">✕</button></td>
+              <td style="font-weight:500;">${s.name}</td>
+              <td><button class="btn btn-danger btn-sm" style="padding:4px 8px;" onclick="deleteStudent('${activeRoom.id}','${s.id}')">✕</button></td>
             </tr>`).join('')}
           </tbody>
         </table>
+        ${activeRoom.students.length === 0 ? '<div class="empty" style="padding:1rem;">ยังไม่มีนักเรียนในห้องนี้</div>' : ''}
       </div>
-    </div>`).join('');
+    </div>
+  `;
 }
-function addStudent(rid) {
-  const inp = document.getElementById('stu-name-'+rid);
-  const name = inp.value.trim();
-  if(!name) return;
-  db.rooms[rid].students.push({ id:'s'+Date.now(), name });
-  save(); renderRooms(); inp.value='';
+
+// ฟังก์ชันสำหรับเพิ่มหลายคนรวดเดียว (Bulk Add)
+async function bulkAddStudents(rid) {
+  const textarea = document.getElementById('bulk-students-' + rid);
+  const lines = textarea.value.split('\n'); // แยกด้วยการขึ้นบรรทัดใหม่
+  let addedCount = 0;
+
+  lines.forEach(line => {
+    const name = line.trim();
+    if (name) { // ถ้าไม่ใช่บรรทัดว่าง
+      // สร้าง ID เฉพาะตัวด้วยเวลาปัจจุบัน + สุ่มเลข เพื่อไม่ให้ซ้ำ
+      db.rooms[rid].students.push({ id: 's' + Date.now() + Math.random().toString(36).substring(2, 9), name: name });
+      addedCount++;
+    }
+  });
+
+  if (addedCount > 0) {
+    save();
+    renderRooms(); // รีเฟรชหน้าจอใหม่
+    textarea.value = ''; // เคลียร์กล่องข้อความ
+    toast(`✅ เพิ่มนักเรียน ${addedCount} คน เรียบร้อย!`);
+    
+    // อัปเดตข้อมูลชุดใหม่ขึ้น Google Sheets ทันที!
+    await autoSyncRoomToCloud(db.rooms[rid]);
+  } else {
+    toast('⚠️ กรุณาวางรายชื่อนักเรียนก่อนกดบันทึก');
+  }
 }
-function deleteStudent(rid, sid) {
+
+async function deleteStudent(rid, sid) {
   db.rooms[rid].students = db.rooms[rid].students.filter(s=>s.id!==sid);
-  save(); renderRooms();
+  save(); 
+  renderRooms();
+  await autoSyncRoomToCloud(db.rooms[rid]); // ลบเสร็จ อัปเดตชีตด้วย
 }
 
 // =========== CHECK ATTENDANCE ===========
@@ -661,7 +762,6 @@ async function openQR() {
   document.getElementById('qr-room-label').innerHTML = `ห้อง <strong>${currentRoom.name}</strong><br>ประจำวันที่ ${formatThaiDate(dateStr)}`;
   document.getElementById('qr-container').innerHTML = '';
   
-  // สร้าง URL ปลายทางชี้ไปที่ checkin.html ให้ถูกต้องผ่าน origin ตรงๆ
   const base = window.location.origin + '/checkin.html';
   const url = `${base}?rid=${currentRoom.id}&date=${dateStr}&room=${encodeURIComponent(currentRoom.name)}&gas=${encodeURIComponent(gasUrl)}`;
   
@@ -742,7 +842,6 @@ function genReport() {
   let txt = `📋 รายงานเช็คชื่อเข้าแถว\n📅 ประจำวันที่: ${formatThaiDate(dateStr)}\n🚪 ห้อง: ${room.name}\n👨‍🏫 ครูประจำชั้น: ${teacher.name}\n━━━━━━━━━━━━━━━━\n`;
   txt += `✅ มา: ${present.length} | ⏰ สาย: ${late.length} | ❌ ขาด: ${absent.length} | 📝 ลา: ${leave.length}\n👥 ยอดรวม: ${room.students.length} คน\n`;
   
-  // ปรับให้โชว์รายชื่อคน สาย ขาด ลา แบบละเอียด
   if(absent.length > 0 || late.length > 0 || leave.length > 0) {
     txt += `━━━━━━━━━━━━━━━━\n`;
     
