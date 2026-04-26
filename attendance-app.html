@@ -113,7 +113,6 @@
     <p>ส่วนสำหรับบุคลากรครูและอาจารย์</p>
   </div>
 
-  <!-- กล่อง Login -->
   <div class="login-box" id="box-login">
     <h2>เข้าสู่ระบบอาจารย์</h2>
     <div class="form-group">
@@ -146,11 +145,10 @@
     
     <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border);">
       <button class="btn btn-secondary btn-block" onclick="toggleRegister()">+ เพิ่มรายชื่ออาจารย์ใหม่</button>
-      <button class="btn btn-block" style="margin-top:8px; background:var(--amber); color:#fff; border:none;" onclick="injectMockData()">⚙️ สร้างข้อมูลจำลอง (Mock Data 20 ห้อง)</button>
+      <button class="btn btn-block" style="margin-top:8px; background:var(--amber); color:#fff; border:none;" onclick="injectMockData()">⚙️ สร้างข้อมูลจำลอง (Mock Data)</button>
     </div>
   </div>
 
-  <!-- กล่อง Register (ซ่อนไว้) -->
   <div class="login-box" id="box-register" style="display:none;">
     <h2>📝 ลงทะเบียนอาจารย์ใหม่</h2>
     <div class="form-group">
@@ -166,7 +164,7 @@
   </div>
 </div>
 
-<!-- NAV BAR (ซ่อนจนกว่าจะ Login สำเร็จ) -->
+<!-- NAV BAR -->
 <nav class="nav" id="main-nav">
   <div class="nav-brand">
     <span id="nav-teacher-name">เช็คชื่อ</span>
@@ -203,7 +201,6 @@
       <div class="stat"><div class="stat-n" id="s-total">0</div><div class="stat-label">ทั้งหมด</div></div>
     </div>
 
-    <!-- ปุ่ม Action -->
     <div style="display:flex; gap:8px; margin-bottom:1rem; flex-wrap:wrap;">
       <button class="btn btn-primary" id="btn-create-qr" onclick="openQR()">📱 1. สร้าง QR ให้นักเรียนสแกน</button>
       <button class="btn btn-secondary" onclick="pullDataFromSheets()">🔄 2. ดึงข้อมูลที่นักเรียนสแกน</button>
@@ -259,7 +256,6 @@
   </div>
 
   <div class="card">
-    <!-- ชี้แจงชัดเจนว่าเป็นการเพิ่มห้องให้ใคร -->
     <div class="card-title">➕ เพิ่มห้องเรียนใหม่ สำหรับ: <span id="manage-teacher-name" style="color:var(--green)"></span></div>
     <div class="form-row">
       <div class="form-group">
@@ -324,18 +320,13 @@
 
 <script>
 // =========== DATA STRUCTURE ===========
-// โครงสร้างข้อมูลที่ออกแบบมาสำหรับหลายอาจารย์
 let db = { 
-  teachers: {}, // เก็บรายชื่ออาจารย์และ PIN
-  rooms: {},    // เก็บห้อง โดยแต่ละห้องจะผูกกับ teacherId
-  attendance: {}, 
-  settings: { sheetUrl: '' } 
+  teachers: {}, rooms: {}, attendance: {}, settings: { sheetUrl: '' } 
 };
 let currentTeacherId = null;
 let currentRoom = null;
 let currentPinInput = "";
 
-// Utils
 function save() { localStorage.setItem('attend_db_v3', JSON.stringify(db)); }
 function load() {
   const saved = localStorage.getItem('attend_db_v3');
@@ -352,63 +343,52 @@ function formatThaiDate(dateStr) {
   return new Date(dateStr).toLocaleDateString('th-TH',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
 }
 function todayStr() {
-  const d = new Date();
-  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+  const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
   return d.toISOString().slice(0,10);
 }
 
-// =========== INIT & LOGIN (ระบบหน้าบ้าน) ===========
+// =========== INIT & LOGIN ===========
 document.getElementById('check-date').value = todayStr();
 document.getElementById('report-date').value = todayStr();
 
 function initApp() {
   load();
-  // ถ้าเคย Login แล้วค้างไว้ ให้เข้าเลย ถ้ายังให้ไปหน้า Login
   if(currentTeacherId && db.teachers[currentTeacherId]) showDashboard();
   else showLogin();
 }
 
 function injectMockData() {
   toast('กำลังสร้างข้อมูลจำลอง กรุณารอสักครู่...');
-  
   setTimeout(() => {
-    // ล้างและตั้งโครงสร้างใหม่
-    db = { teachers: {}, rooms: {}, attendance: {}, settings: { sheetUrl: '' } };
+    db = { teachers: {}, rooms: {}, attendance: {}, settings: { sheetUrl: db.settings.sheetUrl } };
     
-    // 1. สร้าง Admin
     db.teachers['t_admin'] = { id: 't_admin', name: 'แอดมิน (Admin)', pin: '1234' };
     
-    // คำสุ่มชื่อนักเรียน
     const firstNames = ['สมชาย', 'สมหญิง', 'มานะ', 'มานี', 'ปิติ', 'ชูใจ', 'วีระ', 'เพชร', 'พลอย', 'ฟ้า', 'ตะวัน', 'วิน', 'น้ำ', 'ดิน', 'ไม้', 'ก้อง', 'กล้า', 'แก้ว', 'ขวัญ', 'เอก', 'นพ', 'ดาว', 'เดือน', 'เด่น', 'ชัย'];
     const lastNames = ['ใจดี', 'รักเรียน', 'ขยันยิ่ง', 'มุ่งมั่น', 'สุขสันต์', 'พากเพียร', 'กล้าหาญ', 'รุ่งเรือง', 'สว่างวงศ์', 'ดีเลิศ', 'เจริญทรัพย์', 'มั่นคง', 'ยอดเยี่ยม', 'ประเสริฐ', 'บุญมา'];
     
-    // 2. สร้าง 20 Teachers & 20 Rooms
     for (let i = 1; i <= 20; i++) {
       let tId = 't_mock_' + i;
       db.teachers[tId] = { id: tId, name: 'อาจารย์ทดสอบ ' + i, pin: '1234' }; 
-      
       let rId = 'r_mock_' + i;
-      let grade = Math.ceil(i / 4); // แจกแจงชั้น ม.1 ถึง ม.5
-      let sub = ((i - 1) % 4) + 1;  // ห้อง 1 ถึง 4
+      let grade = Math.ceil(i / 4); 
+      let sub = ((i - 1) % 4) + 1;  
       db.rooms[rId] = { id: rId, teacherId: tId, name: `ม.${grade}/${sub}`, students: [] };
       
-      // 3. สร้าง 20 Students per room
       for (let j = 1; j <= 20; j++) {
         let rName = firstNames[Math.floor(Math.random() * firstNames.length)] + ' ' + lastNames[Math.floor(Math.random() * lastNames.length)];
         db.rooms[rId].students.push({ id: 's_' + rId + '_' + j, name: rName });
       }
     }
     
-    save();
-    currentTeacherId = null;
-    currentPinInput = "";
-    showLogin(); // โหลดหน้า UI ใหม่เพื่อแสดงรายชื่อ
-    toast('✅ สร้างข้อมูลจำลองสำเร็จ! (ทุกบัญชีใช้ PIN: 1234)', 4000);
+    save(); currentTeacherId = null; currentPinInput = "";
+    showLogin(); 
+    toast('✅ สร้างข้อมูลสำเร็จ! (ทุกบัญชีใช้ PIN: 1234)', 4000);
   }, 500);
 }
 
 function showLogin() {
-  document.body.style.background = "var(--green-dark)"; // เปลี่ยนสีพื้นหลังหน้า Login
+  document.body.style.background = "var(--green-dark)";
   document.getElementById('main-nav').style.display = 'none';
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.getElementById('page-login').classList.add('active');
@@ -446,24 +426,18 @@ function registerTeacher() {
   
   const id = 't_' + Date.now();
   db.teachers[id] = { id, name, pin };
-  save();
-  toast('ลงทะเบียนอาจารย์สำเร็จ! กรุณาเข้าสู่ระบบ');
+  save(); toast('ลงทะเบียนสำเร็จ!');
   document.getElementById('reg-name').value = '';
   document.getElementById('reg-pin').value = '';
-  toggleRegister();
-  showLogin();
+  toggleRegister(); showLogin();
 }
 
-// ระบบกด PIN
 function addPin(num) {
   if(currentPinInput.length < 4) currentPinInput += num;
   updatePinDots();
   if(currentPinInput.length === 4) verifyLogin();
 }
-function clearPin() {
-  currentPinInput = "";
-  updatePinDots();
-}
+function clearPin() { currentPinInput = ""; updatePinDots(); }
 function updatePinDots() {
   const dots = document.getElementById('pin-dots').children;
   for(let i=0; i<4; i++) {
@@ -474,24 +448,17 @@ function updatePinDots() {
 function verifyLogin() {
   const tid = document.getElementById('login-teacher-select').value;
   if(db.teachers[tid].pin === currentPinInput) {
-    currentTeacherId = tid;
-    toast(`ยินดีต้อนรับ ${db.teachers[tid].name}`);
-    showDashboard();
-  } else {
-    toast('รหัส PIN ไม่ถูกต้อง!');
-    clearPin();
-  }
+    currentTeacherId = tid; toast(`ยินดีต้อนรับ ${db.teachers[tid].name}`); showDashboard();
+  } else { toast('รหัส PIN ไม่ถูกต้อง!'); clearPin(); }
 }
 function logout() {
-  currentTeacherId = null;
-  currentPinInput = "";
-  document.getElementById('pin-section').style.display = 'none';
-  showLogin();
+  currentTeacherId = null; currentPinInput = "";
+  document.getElementById('pin-section').style.display = 'none'; showLogin();
 }
 
-// =========== DASHBOARD & NAVIGATION ===========
+// =========== DASHBOARD ===========
 function showDashboard() {
-  document.body.style.background = "var(--bg)"; // คืนสีพื้นหลังปกติ
+  document.body.style.background = "var(--bg)";
   document.getElementById('page-login').classList.remove('active');
   document.getElementById('main-nav').style.display = 'flex';
   document.getElementById('nav-teacher-name').textContent = "อ." + db.teachers[currentTeacherId].name;
@@ -510,14 +477,12 @@ function showPage(name) {
   if(name==='check') { refreshRoomSelect('room-select'); refreshCheck(); }
   if(name==='report') { refreshRoomSelect('report-room'); genReport(); }
   if(name==='manage') { 
-    // อัปเดตชื่ออาจารย์ในหน้าเพิ่มห้อง
     document.getElementById('manage-teacher-name').textContent = db.teachers[currentTeacherId].name;
     renderRooms(); 
   }
   if(name==='settings') loadSettingsPage();
 }
 
-// ฟังก์ชันกรองดึงเฉพาะห้องของตัวเอง (Isolated Teacher Accounts)
 function getMyRooms() { return Object.values(db.rooms).filter(r => r.teacherId === currentTeacherId); }
 
 function refreshRoomSelect(selId) {
@@ -528,25 +493,19 @@ function refreshRoomSelect(selId) {
     myRooms.map(r=>`<option value="${r.id}" ${r.id===cur?'selected':''}>${r.name}</option>`).join('');
 }
 
-// =========== MANAGE ROOMS (หน้าจัดการ) ===========
+// =========== MANAGE ROOMS ===========
 function addRoom() {
   const name = document.getElementById('new-room-name').value.trim();
   if(!name) return toast('กรุณาระบุชื่อห้องเรียน');
-  
   const id = 'r' + Date.now();
-  // บันทึกห้อง โดยผูกกับ teacherId ปัจจุบันอัตโนมัติ
   db.rooms[id] = { id, teacherId: currentTeacherId, name, students: [] };
-  save(); 
-  renderRooms(); 
-  document.getElementById('new-room-name').value='';
+  save(); renderRooms(); document.getElementById('new-room-name').value='';
   toast(`เพิ่มห้อง ${name} สำเร็จ`);
 }
 
 function deleteRoom(id) {
   if(!confirm('ยืนยันการลบห้องเรียนนี้? ข้อมูลนักเรียนทั้งหมดจะหายไป')) return;
-  delete db.rooms[id]; 
-  save(); 
-  renderRooms();
+  delete db.rooms[id]; save(); renderRooms();
 }
 
 function renderRooms() {
@@ -659,11 +618,11 @@ function markAll(status) {
 async function openQR() {
   if(!currentRoom) return;
   const gasUrl = db.settings.sheetUrl;
-  if(!gasUrl) return toast('⚠️ กรุณาไปที่ "ตั้งค่า" และใส่ Google Sheets URL ก่อนสร้าง QR');
+  if(!gasUrl) return toast('⚠️ กรุณาไปที่ "ตั้งค่า" และให้ Admin ใส่ Google Sheets URL ก่อนสร้าง QR');
 
   const btn = document.getElementById('btn-create-qr');
   btn.disabled = true;
-  btn.textContent = 'กำลังซิงค์ขึ้น Cloud...';
+  btn.textContent = 'กำลังเตรียม QR...';
   
   try {
     const res = await fetch(gasUrl, {
@@ -671,7 +630,7 @@ async function openQR() {
       body: JSON.stringify({ action: 'syncRoom', room: currentRoom })
     });
     const result = await res.json();
-    if(result.success) toast('✅ ซิงค์ห้องเรียนสำเร็จ');
+    if(result.success) toast('✅ ซิงค์ห้องเรียนสำเร็จ เปิด QR Code แล้ว');
     else throw new Error();
   } catch(e) {
     toast('❌ ซิงค์ล้มเหลว ตรวจสอบ URL หรืออินเทอร์เน็ต');
@@ -688,7 +647,8 @@ async function openQR() {
   document.getElementById('qr-room-label').innerHTML = `ห้อง <strong>${currentRoom.name}</strong><br>ประจำวันที่ ${formatThaiDate(dateStr)}`;
   document.getElementById('qr-container').innerHTML = '';
   
-  const base = window.location.href.split('?')[0].replace('attendance-app.html', 'checkin.html');
+  // สร้าง URL ปลายทางชี้ไปที่ checkin.html ให้ถูกต้อง
+  const base = window.location.origin + '/checkin.html';
   const url = `${base}?rid=${currentRoom.id}&date=${dateStr}&room=${encodeURIComponent(currentRoom.name)}&gas=${encodeURIComponent(gasUrl)}`;
   
   new QRCode(document.getElementById('qr-container'), {
@@ -760,19 +720,38 @@ function genReport() {
   const absent=[], late=[], leave=[], present=[];
   room.students.forEach((s, i)=>{
     const v = att[s.id]||'none';
-    const nameStr = `${i+1}. ${s.name}`;
+    const nameStr = `${s.name}`;
     if(v==='absent') absent.push(nameStr); else if(v==='late') late.push(nameStr);
     else if(v==='leave') leave.push(nameStr); else if(v==='present') present.push(nameStr);
   });
 
   let txt = `📋 รายงานเช็คชื่อเข้าแถว\n📅 ประจำวันที่: ${formatThaiDate(dateStr)}\n🚪 ห้อง: ${room.name}\n👨‍🏫 ครูประจำชั้น: ${teacher.name}\n━━━━━━━━━━━━━━━━\n`;
   txt += `✅ มา: ${present.length} | ⏰ สาย: ${late.length} | ❌ ขาด: ${absent.length} | 📝 ลา: ${leave.length}\n👥 ยอดรวม: ${room.students.length} คน\n`;
-  if(absent.length || late.length || leave.length) {
+  
+  // ปรับให้โชว์รายชื่อคน สาย ขาด ลา แบบละเอียด
+  if(absent.length > 0 || late.length > 0 || leave.length > 0) {
     txt += `━━━━━━━━━━━━━━━━\n`;
-    if(absent.length) txt += `❌ รายชื่อขาด (${absent.length}):\n${absent.join('\n')}\n\n`;
-    if(late.length) txt += `⏰ รายชื่อสาย (${late.length}):\n${late.join('\n')}\n\n`;
-    if(leave.length) txt += `📝 รายชื่อลา (${leave.length}):\n${leave.join('\n')}\n\n`;
+    
+    if(absent.length > 0) {
+      txt += `❌ รายชื่อขาด (${absent.length} คน):\n`;
+      absent.forEach((name, idx) => txt += `   ${idx+1}. ${name}\n`);
+      txt += `\n`;
+    }
+    if(late.length > 0) {
+      txt += `⏰ รายชื่อสาย (${late.length} คน):\n`;
+      late.forEach((name, idx) => txt += `   ${idx+1}. ${name}\n`);
+      txt += `\n`;
+    }
+    if(leave.length > 0) {
+      txt += `📝 รายชื่อลา (${leave.length} คน):\n`;
+      leave.forEach((name, idx) => txt += `   ${idx+1}. ${name}\n`);
+      txt += `\n`;
+    }
+    txt += `*(รายชื่อที่ไม่ได้ระบุคือมาเรียนปกติ)*`;
+  } else {
+    txt += `━━━━━━━━━━━━━━━━\n✅ นักเรียนมาครบทุกคน ยอดเยี่ยมมากครับ! 🎉`;
   }
+
   document.getElementById('report-text').textContent = txt.trim();
 }
 
@@ -823,5 +802,4 @@ initApp();
 </script>
 </body>
 </html>
-
 
