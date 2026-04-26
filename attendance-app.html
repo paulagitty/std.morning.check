@@ -146,6 +146,7 @@
     
     <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border);">
       <button class="btn btn-secondary btn-block" onclick="toggleRegister()">+ เพิ่มรายชื่ออาจารย์ใหม่</button>
+      <button class="btn btn-block" style="margin-top:8px; background:var(--amber); color:#fff; border:none;" onclick="injectMockData()">⚙️ สร้างข้อมูลจำลอง (Mock Data 20 ห้อง)</button>
     </div>
   </div>
 
@@ -365,6 +366,45 @@ function initApp() {
   // ถ้าเคย Login แล้วค้างไว้ ให้เข้าเลย ถ้ายังให้ไปหน้า Login
   if(currentTeacherId && db.teachers[currentTeacherId]) showDashboard();
   else showLogin();
+}
+
+function injectMockData() {
+  toast('กำลังสร้างข้อมูลจำลอง กรุณารอสักครู่...');
+  
+  setTimeout(() => {
+    // ล้างและตั้งโครงสร้างใหม่
+    db = { teachers: {}, rooms: {}, attendance: {}, settings: { sheetUrl: '' } };
+    
+    // 1. สร้าง Admin
+    db.teachers['t_admin'] = { id: 't_admin', name: 'แอดมิน (Admin)', pin: '1234' };
+    
+    // คำสุ่มชื่อนักเรียน
+    const firstNames = ['สมชาย', 'สมหญิง', 'มานะ', 'มานี', 'ปิติ', 'ชูใจ', 'วีระ', 'เพชร', 'พลอย', 'ฟ้า', 'ตะวัน', 'วิน', 'น้ำ', 'ดิน', 'ไม้', 'ก้อง', 'กล้า', 'แก้ว', 'ขวัญ', 'เอก', 'นพ', 'ดาว', 'เดือน', 'เด่น', 'ชัย'];
+    const lastNames = ['ใจดี', 'รักเรียน', 'ขยันยิ่ง', 'มุ่งมั่น', 'สุขสันต์', 'พากเพียร', 'กล้าหาญ', 'รุ่งเรือง', 'สว่างวงศ์', 'ดีเลิศ', 'เจริญทรัพย์', 'มั่นคง', 'ยอดเยี่ยม', 'ประเสริฐ', 'บุญมา'];
+    
+    // 2. สร้าง 20 Teachers & 20 Rooms
+    for (let i = 1; i <= 20; i++) {
+      let tId = 't_mock_' + i;
+      db.teachers[tId] = { id: tId, name: 'อาจารย์ทดสอบ ' + i, pin: '1234' }; 
+      
+      let rId = 'r_mock_' + i;
+      let grade = Math.ceil(i / 4); // แจกแจงชั้น ม.1 ถึง ม.5
+      let sub = ((i - 1) % 4) + 1;  // ห้อง 1 ถึง 4
+      db.rooms[rId] = { id: rId, teacherId: tId, name: `ม.${grade}/${sub}`, students: [] };
+      
+      // 3. สร้าง 20 Students per room
+      for (let j = 1; j <= 20; j++) {
+        let rName = firstNames[Math.floor(Math.random() * firstNames.length)] + ' ' + lastNames[Math.floor(Math.random() * lastNames.length)];
+        db.rooms[rId].students.push({ id: 's_' + rId + '_' + j, name: rName });
+      }
+    }
+    
+    save();
+    currentTeacherId = null;
+    currentPinInput = "";
+    showLogin(); // โหลดหน้า UI ใหม่เพื่อแสดงรายชื่อ
+    toast('✅ สร้างข้อมูลจำลองสำเร็จ! (ทุกบัญชีใช้ PIN: 1234)', 4000);
+  }, 500);
 }
 
 function showLogin() {
@@ -783,4 +823,5 @@ initApp();
 </script>
 </body>
 </html>
+
 
