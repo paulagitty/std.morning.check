@@ -358,7 +358,7 @@ function initApp() {
 }
 
 function injectMockData() {
-  toast('กำลังสร้างข้อมูลจำลอง กรุณารอสักครู่...');
+  toast('กำลังสร้างข้อมูลจำลองและสุ่มการเช็คชื่อ กรุณารอสักครู่...');
   setTimeout(() => {
     db = { teachers: {}, rooms: {}, attendance: {}, settings: { sheetUrl: db.settings.sheetUrl } };
     
@@ -367,6 +367,10 @@ function injectMockData() {
     const firstNames = ['สมชาย', 'สมหญิง', 'มานะ', 'มานี', 'ปิติ', 'ชูใจ', 'วีระ', 'เพชร', 'พลอย', 'ฟ้า', 'ตะวัน', 'วิน', 'น้ำ', 'ดิน', 'ไม้', 'ก้อง', 'กล้า', 'แก้ว', 'ขวัญ', 'เอก', 'นพ', 'ดาว', 'เดือน', 'เด่น', 'ชัย'];
     const lastNames = ['ใจดี', 'รักเรียน', 'ขยันยิ่ง', 'มุ่งมั่น', 'สุขสันต์', 'พากเพียร', 'กล้าหาญ', 'รุ่งเรือง', 'สว่างวงศ์', 'ดีเลิศ', 'เจริญทรัพย์', 'มั่นคง', 'ยอดเยี่ยม', 'ประเสริฐ', 'บุญมา'];
     
+    // อัตราส่วนการสุ่ม: มา 70%, สาย 10%, ขาด 10%, ลา 10%
+    const statuses = ['present', 'present', 'present', 'present', 'present', 'present', 'present', 'late', 'absent', 'leave'];
+    const today = todayStr();
+
     for (let i = 1; i <= 20; i++) {
       let tId = 't_mock_' + i;
       db.teachers[tId] = { id: tId, name: 'อาจารย์ทดสอบ ' + i, pin: '1234' }; 
@@ -375,15 +379,25 @@ function injectMockData() {
       let sub = ((i - 1) % 4) + 1;  
       db.rooms[rId] = { id: rId, teacherId: tId, name: `ม.${grade}/${sub}`, students: [] };
       
+      // สร้าง Object เก็บข้อมูลเช็คชื่อสำหรับห้องนี้ในวันนี้
+      db.attendance[rId] = {};
+      db.attendance[rId][today] = {};
+
       for (let j = 1; j <= 20; j++) {
         let rName = firstNames[Math.floor(Math.random() * firstNames.length)] + ' ' + lastNames[Math.floor(Math.random() * lastNames.length)];
-        db.rooms[rId].students.push({ id: 's_' + rId + '_' + j, name: rName });
+        let sId = 's_' + rId + '_' + j;
+        
+        db.rooms[rId].students.push({ id: sId, name: rName });
+        
+        // สุ่มสถานะการเช็คชื่อให้นักเรียนคนนี้
+        let randomStatus = statuses[Math.floor(Math.random() * statuses.length)];
+        db.attendance[rId][today][sId] = randomStatus;
       }
     }
     
     save(); currentTeacherId = null; currentPinInput = "";
     showLogin(); 
-    toast('✅ สร้างข้อมูลสำเร็จ! (ทุกบัญชีใช้ PIN: 1234)', 4000);
+    toast('✅ สร้างข้อมูลสำเร็จ! (มีประวัติเช็คชื่อของวันนี้แล้ว)', 4000);
   }, 500);
 }
 
@@ -802,3 +816,4 @@ initApp();
 </script>
 </body>
 </html>
+
